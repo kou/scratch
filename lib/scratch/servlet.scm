@@ -94,7 +94,9 @@
 
 (define (store-session servlet out)
   (let ((table (session-table-of servlet)))
-    (write (filter marshalizable?
+    (write (filter (lambda (elem)
+                     (and (marshalizable? (car elem))
+                          (marshalizable? (cdr elem))))
                    (marshal-table->alist table))
            out)))
 

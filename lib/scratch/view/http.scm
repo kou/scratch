@@ -1,6 +1,8 @@
 (define-module scratch.view.http
   (extend scratch.common)
   (use srfi-11)
+  (use rfc.uri)
+  (use gauche.regexp)
   (use file.util)
   (use util.list)
   (use text.tree)
@@ -8,7 +10,8 @@
   (use esm.gauche)
   (export load-esm-files define-scratch-esm
           input
-          h href form alist->attributes
+          h hd u ue
+          href form alist->attributes
           user-name-input password-input
           default-view)
   )
@@ -22,8 +25,25 @@
     (html:h1 "DEFUALT VIEW")
     (html:p "This is default view. You must be overwrite this."))))
 
-(define (h string)
-  (with-string-io (x->string string) html-escape))
+(define (h str)
+  (with-string-io (x->string str) html-escape))
+
+(define (hd str)
+  (regexp-replace-all #/&(.*?)\;/ str
+    (lambda (md)
+      (rxmatch-case (md 1)
+        (#/^amp$/i (#f) "&")
+        (#/^quot$/i (#f) "\"")
+        (#/^gt$/i (#f) ">")
+        (#/^lt$/i (#f) "<")
+        (#/^#0*(\d+)$/i (#f int)
+          (ucs->char (string->number int)))
+        (#/^#x([0-9a-f]+)$/i (#f hex)
+          (ucs->char (string->number hex 16)))
+        (else #`"&,(md 1);")))))
+  
+(define u uri-encode-string)
+(define ud uri-decode-string)
 
 (define (alist->params alist)
   (map (lambda (elem)

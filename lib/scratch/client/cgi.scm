@@ -1,6 +1,7 @@
 (define-module scratch.client.cgi
   (extend scratch.client)
   (use www.cgi)
+  (use gauche.charconv)
   (use srfi-1)
   (use rfc.cookie)
   (use text.tree)
@@ -27,7 +28,11 @@
                                         (get-keyword :debug args #f))))
     (cgi-main
      (lambda (params)
-       (let* ((dispatch (client mount-point))
+       (let* ((params (map (lambda (elem)
+                             (map (cut ces-convert <> "*JP")
+                                  elem))
+                           params))
+              (dispatch (client mount-point))
               (id (cgi-get-parameter (x->string *scratch-id-key*)
                                      params
                                      :convert string->number))
