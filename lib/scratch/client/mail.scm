@@ -1,6 +1,7 @@
 (define-module scratch.client.mail
   (extend scratch.client)
   (use srfi-8)
+  (use srfi-13)
   (use gauche.charconv)
   (use rfc.822)
   (use rfc.base64)
@@ -26,9 +27,9 @@
 
 (define (content-type->encoding ctype . default)
   (let ((md (rxmatch #/([^\;]+\;)?\s*charset=(\S+)/ ctype)))
-    (if md
-        (md 2)
-        (get-optional default "ascii"))))
+    (string-downcase (if md
+                         (md 2)
+                         (get-optional default "ascii")))))
 
 (define (scratch-mail-main client mount-point mail . args)
   (let ((in (cond ((input-port? mail) mail)
@@ -55,26 +56,27 @@
 
 (define (parse-body body)
   (let ((line (read-line body)))
-    (cond ((eof-object? line) '(()))
+    (cond ((eof-object? line) '())
           ((rxmatch #/^(\S+):\s*$/ line)
            => (lambda (md)
                 (do ((next (read-line body) (read-line body))
                      (acc '() (cons next acc)))
                     ((or (eof-object? next)
                          (rxmatch #/^(\S+):/ next))
-                     (let ((result `((,(md 1) ,(string-join acc "\n")))))
+                     (let ((result `(,(md 1)
+                                     ,(string-join (reverse acc) "\n"))))
                        (if (eof-object? next)
-                           result
+                           (list result)
                            (cons result
                                  (parse-body
                                   (open-input-string
-                                   (string-join (list next (port->string body))
+                                   (string-join (cons next (port->string-list body))
                                                 "\n"))))))))))
           ((rxmatch #/^(\S+):\s*(.+)$/ line)
            => (lambda (md)
-                (cons (list (md 1) (md 2))
+                (cons (list (md 1) (string-trim-right (md 2)))
                       (parse-body body))))
-          (else `(("body" ,(string-join (list line (port->string body))
+          (else `(("body" ,(string-join (cons line (port->string-list body))
                                         "\n")))))))
 
 ;; from scmail
