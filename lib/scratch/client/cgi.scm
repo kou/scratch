@@ -15,6 +15,9 @@
   (export scratch-cgi-main scratch-mobile-agent?))
 (select-module scratch.client.cgi)
 
+(define (listify arg)
+  (if (or (pair? arg) (null? arg)) arg (list arg)))
+  
 (define (add-meta-info params default-langs)
   (fold (lambda (key-info prev)
           (let* ((search-key (car key-info))
@@ -33,9 +36,9 @@
                               )
                             (get-meta search-key)))))
             (if value
-                (cons (list regist-key value)
-                      prev)
-                prev)))
+              (cons (cons regist-key (listify value))
+                    prev)
+              prev)))
         params
         `(((("REQUEST_URI" ,(lambda (value)
                               (and value
@@ -46,8 +49,11 @@
           ("HTTP_HOST" "host-name")
           ((("HTTP_ACCEPT_LANGUAGE"
              ,(lambda (value)
-                (or (cgi-get-parameter "language" params :default #f)
-                    (parse-accept-language value default-langs)))))
+                (let ((langs (cgi-get-parameter "language" params
+                                                :default #f :list #t)))
+                  (if (null? langs)
+                    (parse-accept-language value default-langs)
+                    langs)))))
            "language")
           ((("HTTP_IF_MODIFIED_SINCE"
              ,(lambda (value)
