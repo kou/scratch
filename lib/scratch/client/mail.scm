@@ -1,6 +1,7 @@
 (define-module scratch.client.mail
   (extend scratch.client)
   (use srfi-8)
+  (use srfi-11)
   (use srfi-13)
   (use gauche.charconv)
   (use rfc.822)
@@ -13,8 +14,9 @@
 (define (port->header-list&body in)
   (let ((headers (map (lambda (field)
                         (list (car field)
-                              (decode-field (cadr field)
-                                            (gauche-character-encoding))))
+                              (string-trim-right
+                               (decode-field (cadr field)
+                                             (gauche-character-encoding)))))
                       (rfc822-header->list in))))
     (values headers
             (call-with-input-conversion in
@@ -31,30 +33,47 @@
                          (md 2)
                          (get-optional default "ascii")))))
 
+(define (id&action str . defaults)
+  (let-keywords* defaults ((id 0)
+                           (action ""))
+    ;; Why #/\s*(\[\s*(\S+)?\s*\])?[^\d]*(\d+)?/ is not good?
+    (let ((md (rxmatch #/\s*(\[\s*(\S+)?\s*\])?[^\d]*(\d+)?/ str)))
+      (values (if (and md (md 3))
+                  (x->number (md 3))
+                  id)
+              (or (and md (md 2))
+                  action)))))
+
 (define (scratch-mail-main client mount-point mail . args)
   (let ((in (cond ((input-port? mail) mail)
                   ((string? mail) (open-input-string mail))
                   (else (error #`",mail must be input-port or string"))))
-        (id 0)
-        (action "")
         (type 'smtp))
-    (receive (headers mail-body)
-        (port->header-list&body in)
-      (let ((md (rxmatch #/\[\s*(\S+)\s*\][^\d](\d+)$/
-                         (rfc822-header-ref headers "subject" ""))))
-        (when md
-          (set! id (x->number (md 2)))
-          (set! action (md 1)))
-        (let* ((dispatch (client mount-point))
-               (result (apply dispatch id action type
-                              (parse-body (open-input-string mail-body))))
-               (header-info (car result))
-               (body (open-input-string (cadr result))))
-          (send-mail "localhost" 25 body
-                     (get-keyword :from header-info)
-                     (get-keyword :to header-info)))))))
+    (let*-values (((headers mail-body) (port->header-list&body in))
+                  ((id action)
+                   (id&action (rfc822-header-ref headers "subject" ""))))
+      (let* ((dispatch (client mount-point))
+             (result (apply dispatch id action type
+                            (parse-body (open-input-string mail-body))))
+             (header-info (car result))
+             (body (open-input-string (cadr result))))
+        (send-mail "localhost" 25 body
+                   (get-keyword :from header-info)
+                   (get-keyword :to header-info))))))
+
+(define (add-param name value params)
+  (let ((param (assoc name params)))
+    (if param
+        (begin
+          (set! (cdr param) (cons value (cdr param)))
+          params)
+        (cons (list name value) params))))
 
 (define (parse-body body)
+  (define (add-line line in)
+    (string-join (cons line (port->string-list in))
+                 "\n"))
+  
   (let ((line (read-line body)))
     (cond ((eof-object? line) '())
           ((rxmatch #/^(\S+):\s*$/ line)
@@ -63,21 +82,19 @@
                      (acc '() (cons next acc)))
                     ((or (eof-object? next)
                          (rxmatch #/^(\S+):/ next))
-                     (let ((result `(,(md 1)
-                                     ,(string-join (reverse acc) "\n"))))
+                     (let ((name (md 1))
+                           (value (string-join (reverse acc) "\n")))
                        (if (eof-object? next)
-                           (list result)
-                           (cons result
-                                 (parse-body
-                                  (open-input-string
-                                   (string-join (cons next (port->string-list body))
-                                                "\n"))))))))))
+                           (list (list name value))
+                           (add-param name value
+                                      (parse-body
+                                       (open-input-string
+                                        (add-line next body))))))))))
           ((rxmatch #/^(\S+):\s*(.+)$/ line)
            => (lambda (md)
-                (cons (list (md 1) (string-trim-right (md 2)))
-                      (parse-body body))))
-          (else `(("body" ,(string-join (cons line (port->string-list body))
-                                        "\n")))))))
+                (add-param (md 1) (string-trim-right (md 2))
+                           (parse-body body))))
+          (else `(("body" ,(add-line line body)))))))
 
 ;; from scmail
 (define (send-mail host port iport mail-from recipients)
