@@ -2,6 +2,8 @@
 
 = README.ja
 
+$Id$
+
 == 作者
 
 Kouhei Sutou <kou@cozmixng.org>
@@ -16,9 +18,10 @@ GPL or BSD License
 
 == なにこれ？
 
-Gauche用のWebベースアプリケーションフレームワークです．現在
-はHTTP用モジュールしかありませんが，将来はSMTPやGUIツールキッ
-ト用のモジュールも追加しようと思っています．
+Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
+レームワークです．現在はHTTP用モジュールしかありませんが，将
+来はSMTPやGUIツールキット用のモジュールも追加しようと思って
+います．
 
 以下のような機能があります．
 
@@ -59,5 +62,61 @@ Gauche用のWebベースアプリケーションフレームワークです．現在
 
   # gosh install/install.scm
 
+== 構造
+
+
+                  dsm
+                ------>               ----->              ------>
+                   id                   id                session
+                 action                action             others
+                 others                others
+  クライアント          scratchサーバ         サーブレット        アクション
+     CGI等        dsm
+                <------               <------             <------
+                  header               header              view-name
+                  result               result
+                                                 /\  |
+                                          result |   | session
+                                                 |   | others
+                                                 |   \/
+                                                 esm等
+
+scratchで管理するデータには3種類のスコープがあります．
+
+  (1) サーブレット単位
+  (1) セッション単位
+  (1) サイクル単位
+
 == 使い方
 
+scratchを用いたWebベースアプリケーション開発は以下のようにな
+るでしょう．
+
+  * アプリケーションの機能を提供するライブラリの作成
+  * クライアントの要求に対応するアクションの作成
+  * クライアントに返す結果を生成するesmの作成
+
+最初のライブラリの作成はscratchに依存しないようにするべきで
+す．依存しないようにするとscratchを使うことをやめても使いま
+わすことができます．
+
+ここでは，ライブラリはすでにできているものとしてアクションの
+作成とesmの作成を扱います．
+
+=== アクションの作成
+
+まず，アクションを扱うモジュールを作成します．
+
+  (define-module sample-app-servlet
+    (use scratch.servlet)
+    (use sample-app))
+  (select-module sample-app-servlet)
+  (provide "sample-app-servlet")
+
+ここで，sample-appというモジュールがアプリケーションの機能を
+提供するライブラリで，sample-app-servletがクライアントの要求
+に対応するアクションを扱うモジュールです．
+
+このアクションを扱うsample-app-servletモジュールは
+
+scratchを用いる場合は

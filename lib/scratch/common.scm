@@ -4,12 +4,17 @@
   (use srfi-11)
   (use gauche.parameter)
   (use gauche.sequence)
-  (use scratch.session)
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
           session parameters user-manager servlet-db
           get-param get-action get-user
-          get-state set-state!
+          get-servlet-value set-servlet-value!
+          delete-servlet-value! servlet-value-exists?
+          get-value set-value! delete-value! value-exists?
+          get-cycle-value set-cycle-value!
+          delete-cycle-value! cycle-value-exists?
+          get-response-value set-response-value!
+          delete-response-value! response-value-exists?
           get-id set-id!
           generate-id&action
           login! logout! login?
@@ -40,24 +45,50 @@
                  (list :default (car options)))
            :list #f)))
 
-(define (get-state key . fall-back)
-  (apply get-value (session) key fall-back))
+(define-method get-servlet-value (key . fall-back)
+  (apply get-value (servlet-db) key fall-back))
+(define-method set-servlet-value! (key value)
+  (set-value! (servlet-db) key value))
+(define-method delete-servlet-value! (key)
+  (delete-value! (servlet-db) key))
+(define-method servlet-value-exists? (key)
+  (value-exists? (servlet-db) key))
 
-(define (set-state! key value)
+(define-method get-value (key . fall-back)
+  (apply get-value (session) key fall-back))
+(define-method set-value! (key value)
   (set-value! (session) key value))
+(define-method delete-value! (key)
+  (delete-value! (session) key))
+(define-method value-exists? (key)
+  (value-exists? (session) key))
+
+(define-method get-cycle-value (key . fall-back)
+  (apply get-cycle-value (session) key fall-back))
+(define-method set-cycle-value! (key value)
+  (set-cycle-value! (session) key value))
+(define-method delete-cycle-value! (key)
+  (delete-cycle-value! (session) key))
+(define-method cycle-value-exists? (key)
+  (cycle-value-exists? (session) key))
+
+(define-method get-response-value (key . fall-back)
+  (apply get-response-value (session) key fall-back))
+(define-method set-response-value! (key value)
+  (set-response-value! (session) key value))
+(define-method delete-response-value! (key)
+  (delete-response-value! (session) key))
+(define-method response-value-exists? (key)
+  (response-value-exists? (session) key))
 
 (define-method get-id ()
   (get-id (session)))
-
 (define-method get-id (session)
   (get-value session *scratch-id-key* #f))
-
 (define-method set-id! ()
   (set-id! (session)))
-
 (define-method set-id! (session)
   (set-id! session (id-of session)))
-
 (define-method set-id! (session id)
   (set-value! session *scratch-id-key* id))
 
@@ -65,7 +96,7 @@
   (get-param *scratch-action-key*))
 
 (define (get-user)
-  (get-state *scratch-user-key* #f))
+  (get-value *scratch-user-key* #f))
 
 (define (generate-id&action . args)
   (let ((default-id (get-id)))
@@ -94,11 +125,9 @@
                         (values id action args))))))))
 
 (define (login! user)
-  (set-state! *scratch-user-key* user))
-
+  (set-value! *scratch-user-key* user))
 (define (logout!)
-  (set-state! *scratch-user-key* #f))
-
+  (set-value! *scratch-user-key* #f))
 (define (login? user)
   (let ((current-user (get-user)))
     (and (string? user)
@@ -107,7 +136,6 @@
 
 (define-method valid-user? (user password)
   (valid-user? (user-manager) user password))
-
 (define-method user-exists? (user)
   (user-exists? (user-manager) user))
 

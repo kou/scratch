@@ -3,7 +3,7 @@
 <p>
 	<a href="<%= (href :new-session #t :action 'main) %>">NEW GAME</a>
 	/
-	<%= (get-state 'count) %>
+	<%= (get-value 'count) %>
 	/
 	<%= (get-user) %>
 	/

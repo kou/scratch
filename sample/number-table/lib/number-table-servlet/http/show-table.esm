@@ -1,10 +1,10 @@
 <table>
 <% (for-each (lambda (row) %>
-	<tr>
+  <tr>
 <%           (for-each (lambda (cell)  %>
-		<td><%=            (h cell)  %></td>
+    <td><%=            (h cell)  %></td>
 <%                     ) row) %>
-	</tr>
+  </tr>
 <%           )
-						 (get-state 'table)) %>
+             (get-value 'table)) %>
 </table>

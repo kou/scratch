@@ -24,7 +24,7 @@
   (map (lambda (way available)
          (list way available))
        '("west" "north" "east" "south")
-       (get-state 'available-ways)))
+       (get-value 'available-ways)))
 
 (define (move-navi)
   (navigator :params (available-ways)))
@@ -37,7 +37,7 @@
       way))
 
 (define (get-clear-list . do-sort)
-  (let ((lst (get-value (servlet-db) 'clear-list '())))
+  (let ((lst (get-servlet-value 'clear-list '())))
     (if (get-optional do-sort #t)
         (sort lst (lambda (x y)
                     (< (clear-list-score x)

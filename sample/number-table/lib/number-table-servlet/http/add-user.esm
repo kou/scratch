@@ -1,7 +1,7 @@
 <%= (header) %>
 <h1>Number Table: Add user</h1>
-<% (when (get-session-value (session) :message #f) %>
-<h2><%= (get-session-value (session) :message #f) %></h2>
+<% (when (get-cycle-value :message #f) %>
+<h2><%= (get-cycle-value :message #f) %></h2>
 <% ) %>
 <a href="<%= (href :action 'login) %>">Login</a>
 <%= (form) %>

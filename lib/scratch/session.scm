@@ -1,29 +1,29 @@
 (define-module scratch.session
   (use util.list)
+  (use scratch.common)
   (export make-scratch-session
-          id-of response-key-of response-info-list
+          id-of response-info-list
           get-value set-value! delete-value! value-exists?
           get-response-value set-response-value!
           delete-response-value! response-value-exists?
-          get-session-value set-session-value!
-          delete-session-value! session-value-exists?
+          get-cycle-value set-cycle-value!
+          delete-cycle-value! cycle-value-exists?
           clear! valid?))
 (select-module scratch.session)
 
 (define (make-response-values)
   (make-hash-table 'eq?))
 
-(define (make-session-values)
+(define (make-cycle-values)
   (make-hash-table 'eq?))
 
 (define-class <scratch-session> ()
   ((id :accessor id-of)
-   (response-key :accessor response-key-of :init-value #f)
    (values :accessor values-of :init-form (make-hash-table 'eq?))
    (response-values :accessor response-values-of
                     :init-thunk make-response-values)
-   (session-values :accessor session-values-of
-                   :init-thunk make-session-values)
+   (cycle-values :accessor cycle-values-of
+                 :init-thunk make-cycle-values)
    (timeout :accessor timeout-of
             :init-keyword :timeout
             :init-value 3600)
@@ -82,18 +82,18 @@
 (define-method value-exists? ((self <scratch-session>) key)
   (hash-table-exists? (values-of self) key))
 
-(define-method get-session-value ((self <scratch-session>) key . default)
-  (hash-table-get (session-values-of self) key
+(define-method get-cycle-value ((self <scratch-session>) key . default)
+  (hash-table-get (cycle-values-of self) key
                   (get-optional default #f)))
 
-(define-method set-session-value! ((self <scratch-session>) key value)
-  (hash-table-put! (session-values-of self) key value))
+(define-method set-cycle-value! ((self <scratch-session>) key value)
+  (hash-table-put! (cycle-values-of self) key value))
 
-(define-method delete-session-value! ((self <scratch-session>) key)
-  (hash-table-delete! (session-values-of self) key))
+(define-method delete-cycle-value! ((self <scratch-session>) key)
+  (hash-table-delete! (cycle-values-of self) key))
 
-(define-method session-value-exists? ((self <scratch-session>) key)
-  (hash-table-exists? (session-values-of self) key))
+(define-method cycle-value-exists? ((self <scratch-session>) key)
+  (hash-table-exists? (cycle-values-of self) key))
 
 (define-method get-response-value ((self <scratch-session>) key . default)
   (hash-table-get (response-values-of self) key
@@ -110,6 +110,6 @@
 
 (define-method clear! ((self <scratch-session>))
   (set! (response-values-of self) (make-response-values))
-  (set! (session-values-of self) (make-session-values)))
+  (set! (cycle-values-of self) (make-cycle-values)))
   
 (provide "scratch/session")

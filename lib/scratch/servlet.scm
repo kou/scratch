@@ -16,7 +16,8 @@
 
 (define-class <scratch-servlet> ()
   ((session-constructor :accessor session-constructor-of
-                        :init-keyword :session-constructor)
+                        :init-keyword :session-constructor
+                        :init-form (make-scratch-session))
    (servlet-module :accessor servlet-module-of
                    :init-keyword :servlet-module)
    (session-table :accessor session-table-of
@@ -50,15 +51,14 @@
                    (user-manager (user-manager-of self))
                    (servlet-db (db-of self)))
       (clear! (session))
-      (set! (response-key-of (session))
-            (check-login-do (user-manager)
+      (begin0
+          (make-response self
+                         (check-login-do (user-manager)
                             (or (get-param *scratch-user-key* #f)
                                 (get-user))
                             (get-param *scratch-password-key* #f)
                             action
-                            (cut do-action self <>)))
-      (begin0
-          (make-response self type)
+                            (cut do-action self type <>)))
         (store (db-of self) (working-directory-of self))))))
 
 (define (get-valid-session table id)
@@ -87,22 +87,27 @@
                  default))
           module)))
 
-(define (do-action servlet action)
-  (eval-exported-proc (servlet-module-of servlet)
-                      (string->symbol #`"do-,|action|")
-                      (string->symbol #`"do-,|*scratch-default-action-name*|")))
+(define (do-action servlet type action)
+  (make-result servlet
+               type
+               (eval-exported-proc
+                (servlet-module-of servlet)
+                (string->symbol #`"do-,|action|")
+                (string->symbol #`"do-,|*scratch-default-action-name*|"))))
+
+(define (make-result servlet type view-name)
+  (eval-exported-proc (get-response-module servlet type)
+                      view-name
+                      *scratch-default-view-name*))
 
 (define (get-response-module servlet type)
   (get-module
    (string->symbol
     #`",(module-name (servlet-module-of servlet)).,|type|")))
 
-(define (make-response servlet type)
-  (let ((result (eval-exported-proc (get-response-module servlet type)
-                                    (response-key-of (session))
-                                    *scratch-default-view-name*)))
-    (list (response-info-list (session))
-          result)))
+(define (make-response servlet result)
+  (list (response-info-list (session))
+        result))
 
 ;; default procedure
 (define (do-default)

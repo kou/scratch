@@ -1,6 +1,5 @@
 (define-module number-table-servlet
   (use srfi-2)
-  (use www.cgi)
   (use gauche.parameter)
   (use scratch.servlet)
   (use scratch.session)
@@ -27,7 +26,7 @@
     (let ((sess (make-scratch-session :table table
                                       :count 0)))
       (parameterize ((session sess))
-        (update-state!))
+        (update-value!))
       sess)))
 
 (define (get-available-ways table)
@@ -36,17 +35,17 @@
     list))
 
 (define (table)
-  (get-state 'table))
+  (get-value 'table))
 
 (define (count)
-  (get-state 'count))
+  (get-value 'count))
 
 (define (game-clear?)
-  (get-state 'clear?))
+  (get-value 'clear?))
 
-(define (update-state!)
-  (set-state! 'clear? (clear? (table)))
-  (set-state! 'available-ways (get-available-ways (table))))
+(define (update-value!)
+  (set-value! 'clear? (clear? (table)))
+  (set-value! 'available-ways (get-available-ways (table))))
 
 (define (do-default)
   (do-main))
@@ -54,17 +53,17 @@
 (define (do-main)
   (if (game-clear?)
       (begin
-        (set-value! (servlet-db) 'clear-list
-                    (cons (make-clear-list (get-user) (count))
-                          (get-value (servlet-db) 'clear-list '())))
+        (set-servlet-value! 'clear-list
+                            (cons (make-clear-list (get-user) (count))
+                                  (get-servlet-value 'clear-list '())))
         'clear-list)
       'main))
 
 (define (do-move)
   (let* ((way (get-param "way" :convert string->symbol)))
-    (set-state! 'count (+ 1 (count)))
+    (set-value! 'count (+ 1 (count)))
     (move! (table) way)
-    (update-state!)
+    (update-value!)
     (do-main)))
 
 (define (do-add-user)
@@ -74,17 +73,17 @@
                  (password))
                 (if (user-exists? (user-manager) user)
                     (begin
-                      (set-session-value!
-                       (session) :message #`"user ,|user| already exists.")
+                      (set-cycle-value!
+                       :message #`"user ,|user| already exists.")
                       'add-user)
                     (if (add-user! (user-manager) user password)
                         (begin
-                          (set-session-value!
-                           (session) :message #`"user ,|user| added.")
+                          (set-cycle-value!
+                           :message #`"user ,|user| added.")
                           'login)
                         (begin
-                          (set-session-value!
-                           (session) :message #`"user ,|user| can't add.")
+                          (set-cycle-value!
+                           :message #`"user ,|user| can't add.")
                           'add-user))))
       'add-user))
 
@@ -99,8 +98,7 @@
                 (if (valid-user? user password)
                     'jump-to-main
                     (begin
-                      (set-session-value!
-                       (session)
+                      (set-cycle-value!
                        :message (if (user-exists? user)
                                     "password doesn't match"
                                     #`"user ,|user| doesn't exist"))
