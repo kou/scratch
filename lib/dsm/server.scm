@@ -54,15 +54,10 @@
                        '(r))))
     
     (define (handle-dsmp client input output)
-      (let ((header (read-line input)))
-        (if (eof-object? header)
-            (begin (selector-delete! selector input #f #f)
-                   (socket-close client))
-            (dsmp-response header
-                           (marshal-table-of self)
-                           input
-                           output
-                           (cut get-by-mount-point self <>)))))
+      (dsmp-response (marshal-table-of self)
+                     input
+                     output
+                     (cut get-by-mount-point self <>)))
     
     (selector-add! selector
                    (socket-fd (socket-of self))

@@ -27,10 +27,8 @@
          (out (socket-output-port socket))
          (table (make-marshal-table-using-socket socket)))
     (lambda (mount-point)
-      (dsmp-request (marshal table mount-point)
-                    table
-                    in
-                    out
+      (dsmp-request (marshal table mount-point) table
+                    in out
                     (lambda (obj) obj)))))
 
 (provide "dsm/client")

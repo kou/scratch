@@ -8,16 +8,16 @@
   (use dsm.common))
 
 (select-module test-dsm-common)
-(define (x->dsm-header->string table obj)
+(define (x->dsmp-header->string table obj)
   (with-module dsm.common
-    (x->dsm-header->string table obj)))
+    (x->dsmp-header->string table obj)))
 
-(define-assertion (assert-dsm-header header version encoding length command)
+(define-assertion (assert-dsmp-header header version encoding length command)
   (define (make-message-handler expect type)
     (lambda (actual)
       (format " expected <~s> ~a\n  but was <~s>"
               expect type actual)))
-  (let* ((parsed-header (with-module dsm.common (parse-dsm-header header)))
+  (let* ((parsed-header (with-module dsm.common (parse-dsmp-header header)))
          (header-version (with-module dsm.common (version-of parsed-header)))
          (header-encoding (with-module dsm.common (encoding-of parsed-header)))
          (header-length (with-module dsm.common (length-of parsed-header)))
@@ -47,10 +47,10 @@
                     )
                   :prepare (lambda (item)
                              (list (car item)
-                                   (x->dsm-header->string table (cdr item)))))
+                                   (x->dsmp-header->string table (cdr item)))))
      )
     ("parse-header test"
-     (assert-each assert-dsm-header
+     (assert-each assert-dsmp-header
                   `(("v=1;e=UTF-8;l=1;c=get\n" 1 "UTF-8" 1 "get")
                     ("version=1;encoding=UTF-8;length=1;command=eval\n"
                      1 "UTF-8" 1 "eval")
@@ -62,17 +62,17 @@
                   `(1 "abc" ,(lambda (x) x))
                   :prepare
                   (lambda (item)
-                    (list (string-append (x->dsm-header->string table item)
-                                         "\n"
-                                         (marshal table item))
-                          (let ((in (open-input-string (marshal table item)))
-                                (out (open-output-string)))
-                            (dsmp-response
-                             (x->dsm-header->string table item)
-                             table
-                             in
-                             out
-                             (lambda (body) (unmarshal table body)))
-                            (get-output-string out)))))
+                    (let ((dsmp-str (string-append
+                                     (x->dsmp-header->string table item)
+                                     "\n"
+                                     (marshal table item))))
+                      (list dsmp-str
+                            (let ((in (open-input-string dsmp-str))
+                                  (out (open-output-string)))
+                              (dsmp-response table
+                                             in out
+                                             (lambda (body)
+                                               (unmarshal table body)))
+                              (get-output-string out))))))
      )
     ))
