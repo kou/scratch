@@ -2,6 +2,7 @@
   (extend scratch.client)
   (use www.cgi)
   (use gauche.charconv)
+  (use gauche.regexp)
   (use srfi-1)
   (use rfc.cookie)
   (use text.tree)
@@ -52,8 +53,9 @@
               (content-type
                (get-keyword :content-type header-info
                             (format "text/html; charset=~a"
-                                    (or (ces-guess-from-string body "*JP")
-                                        (gauche-character-encoding))))))
+                                    (normalize-charset
+                                     (or (ces-guess-from-string body "*JP")
+                                         (gauche-character-encoding)))))))
          `(,(cond ((get-keyword :location header-info #f)
                    => (cut cgi-header
                            :cookies cookies
@@ -85,5 +87,10 @@
                           (format "Using scratch version is ~a"
                                   *scratch-version*)))
                  ))))
+
+(define (normalize-charset charset)
+  (rxmatch-case charset
+    (#/eucjp/i (orig) "EUC-JP")
+    (else charset)))
 
 (provide "scratch/client/cgi")
