@@ -37,6 +37,8 @@
        :init-form (make <scratch-db-null>))
    (domain :accessor domain-of :init-keyword :domain
            :init-value '("scratch"))
+   (gettext-dirs :accessor gettext-dirs-of :init-keyword :gettext-dirs
+                 :init-value #f)
    ))
 
 (define-method initialize ((self <scratch-servlet>) args)
@@ -69,7 +71,8 @@
                                          (get-param "language" #f)))
                                       (app-gettext))
                                     (make-gettext (domain-of self)
-                                                  (get-param "language" #f)))))
+                                                  (get-param "language" #f)
+                                                  (gettext-dirs-of self)))))
         (clear! (session))
         (begin0
             (make-response self
