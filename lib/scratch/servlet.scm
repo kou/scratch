@@ -1,13 +1,16 @@
 (define-module scratch.servlet
   (extend scratch.common)
   (use srfi-2)
+  (use gauche.parameter)
+  (use gauche.collection)
+  (use gauche.threads)
+  (use file.util)
   (use marshal)
+  (use dsm.server)
   (use scratch.session)
   (use scratch.user.manager)
   (use scratch.db)
-  (use gauche.parameter)
-  (use gauche.collection)
-  (use file.util)
+  (require "scratch/view/http") ;; for thread, parameter and load/require
   (export <scratch-servlet> dispatch))
 (select-module scratch.servlet)
 
@@ -41,7 +44,12 @@
 (define (get-module module-name)
   (or (find-module module-name)
       (begin
-        (load (module-name->path module-name))
+        ;; (p module-name)
+        (require-in-root-thread (module-name->path module-name)
+                                (current-module))
+        (do () ((required-in-root-thread?))
+          (thread-sleep! 1))
+        ;; (load (module-name->path module-name))
         (find-module module-name))))
 
 (define-method dispatch ((self <scratch-servlet>) id action type . args)
@@ -106,8 +114,8 @@
 (define (eval-exported-proc module key default)
   (let ((table (module-table module)))
     (eval `(,(if (hash-table-exists? table key)
-                 key
-                 default))
+               key
+               default))
           module)))
 
 (define (do-action servlet type action)
