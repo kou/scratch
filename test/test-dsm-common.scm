@@ -8,9 +8,9 @@
   (use dsm.common))
 
 (select-module test-dsm-common)
-(define (x->dsmp-header->string table obj)
+(define (x->dsmp-header->string table obj . others)
   (with-module dsm.common
-    (x->dsmp-header->string table obj)))
+    (apply x->dsmp-header->string table obj others)))
 
 (define-assertion (assert-dsmp-header header version encoding length command)
   (define (make-message-handler expect type)
@@ -47,7 +47,8 @@
                     )
                   :prepare (lambda (item)
                              (list (car item)
-                                   (x->dsmp-header->string table (cdr item)))))
+                                   (x->dsmp-header->string table (cdr item)
+                                                           :command "get"))))
      )
     ("parse-header test"
      (assert-each assert-dsmp-header
@@ -63,7 +64,9 @@
                   :prepare
                   (lambda (item)
                     (let ((dsmp-str (string-append
-                                     (x->dsmp-header->string table item)
+                                     (x->dsmp-header->string table item
+                                                             :command
+                                                             "response")
                                      "\n"
                                      (marshal table item))))
                       (list dsmp-str
@@ -71,6 +74,7 @@
                                   (out (open-output-string)))
                               (dsmp-response table
                                              in out
+                                             :response-handler
                                              (lambda (body)
                                                (unmarshal table body)))
                               (get-output-string out))))))

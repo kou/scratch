@@ -17,7 +17,7 @@
   ((version :init-keyword :version :accessor version-of)
    (encoding :init-keyword :encoding :accessor encoding-of)
    (length :init-keyword :length :accessor length-of)
-   (command :init-keyword :command :accessor command-of :init-value "get")))
+   (command :init-keyword :command :accessor command-of)))
 
 (define (get-sock-host&port socket)
   (let* ((md (rxmatch #/(.*):(\d+)$/
@@ -54,7 +54,7 @@
   (make-dsmp-header`(("v" . ,dsmp-version)
                      ("e" . ,(ces-guess-from-string str "*JP"))
                      ("l" . ,(string-length str))
-                     ("c" . ,(get-keyword :command keywords "get")))))
+                     ("c" . ,(get-keyword :command keywords)))))
 
 (define (dsmp-header->string header)
   (string-join (list #`"v=,(version-of header)"
@@ -75,16 +75,19 @@
                                       dsmp-delimiter))))
 
 (define (dsmp-write header body output)
+;  (p (list "write" header body))
   (display header output)
   (display "\n" output)
   (display body output)
   (flush output))
 
 (define (read-dsmp input)
-  (let ((header (read-dsmp-header input)))
-    (values header
-            (read-dsmp-body (length-of header) input))))
-
+;  (p (list "reading..."))
+  (let* ((header (read-dsmp-header input))
+         (body (read-dsmp-body (length-of header) input)))
+;    (p (list "read" (dsmp-header->string header) body))
+    (values header body)))
+  
 (define (read-dsmp-header input)
   (parse-dsmp-header (read-line input)))
 
@@ -92,10 +95,11 @@
   (read-from-string
    (read-block length input)))
 
-(define (dsmp-request marshaled-obj table in out post-handler . keywords)
-  (let-keywords* keywords ((command "get"))
+(define (dsmp-request marshaled-obj table in out . keywords)
+  (let-keywords* keywords ((command "get")
+                           (get-handler (lambda (x) x))
+                           (post-handler (lambda (x) x)))
     (define (dsmp-handler)
-      ;; (p marshaled-obj output)
       (dsmp-write (dsmp-header->string
                    (make-dsmp-header-from-string marshaled-obj
                                                  :command command))
@@ -103,53 +107,75 @@
                   out)
       (receive (header body)
           (read-dsmp in)
-        ;; (p (command-of header) body input)
-        (response-handler header body)))
+        (handle-response header body)))
 
-    (define (response-handler header body)
-      (handle-dsmp-body (command-of header)
-                        body table
-                        in out
-                        get-handler))
+    (define (handle-response header body)
+      (let ((obj (handle-dsmp-body (command-of header)
+                                   body table
+                                   in out
+                                   :get-handler get-handler
+                                   :response-handler response-handler
+                                   :post-handler post-handler)))
+        (cond ((string=? "eval" (command-of header))
+               (let ((marshaled-obj (marshal table obj)))
+                 (dsmp-request marshaled-obj table
+                               in out
+                               :command "response"
+                               :get-handler get-handler
+                               :post-handler post-handler)))
+              (else obj))))
     
-    (define (get-handler obj)
-      (if (reference-object? obj)
+    (define (response-handler obj)
+      (if (and (reference-object? obj)
+               (not (using-same-table? table obj)))
           (lambda arg
-            (eval-in-remote obj arg table in out get-handler))
+            (eval-in-remote obj arg table in out
+                            :get-handler get-handler
+                            :post-handler post-handler))
           (post-handler obj)))
 
     (dsmp-handler)))
 
-(define (eval-in-remote obj arg table in out post-handler)
-  (dsmp-request (marshal table (cons obj arg))
-                table in out post-handler
-                :command "eval"))
+(define (eval-in-remote obj arg table in out . keywords)
+  (apply dsmp-request
+         (marshal table (cons obj arg))
+         table in out
+         :command "eval"
+         keywords))
 
-(define (handle-dsmp-body command body table in out make-body-proc)
-  (cond ((string=? "eval" command)
-         (apply (unmarshal table (car body))
-                (map (lambda (elem)
-                       (let ((obj (unmarshal table elem)))
-                         (if (and (reference-object? obj)
-                                  (not (using-same-table? table obj)))
-                             (lambda arg
-                               (eval-in-remote obj arg table
-                                               in out make-body-proc))
-                             obj)))
-                     (cdr body))))
-        (else (make-body-proc body))))
+(define (handle-dsmp-body command body table in out . keywords)
+  (let-keywords* keywords ((response-handler (lambda (x) x))
+                           (get-handler (lambda (x) x))
+                           (post-handler (lambda (x) x)))
+    (cond ((string=? "eval" command)
+           (apply (unmarshal table (car body))
+                  (map (lambda (elem)
+                         (let ((obj (unmarshal table elem)))
+                           (if (and (reference-object? obj)
+                                    (not (using-same-table? table obj)))
+                               (lambda arg
+                                 (eval-in-remote obj arg table
+                                                 in out
+                                                 :post-handler post-handler))
+                               obj)))
+                       (cdr body))))
+          ((string=? "response" command) (response-handler body))
+          ((string=? "get" command) (get-handler body))
+          (else (error "unknown command" command)))))
 
-(define (dsmp-response table input output make-body-proc)
+(define (dsmp-response table input output . keywords)
   (receive (header body)
       (read-dsmp input)
     (let ((marshalized-body (marshal
                              table
-                             (handle-dsmp-body (command-of header)
-                                               body table
-                                               input output
-                                               make-body-proc))))
+                             (apply handle-dsmp-body
+                                    (command-of header)
+                                    body table
+                                    input output
+                                    keywords))))
       (dsmp-write (dsmp-header->string
-                   (make-dsmp-header-from-string marshalized-body))
+                   (make-dsmp-header-from-string marshalized-body
+                                                 :command "response"))
                   marshalized-body
                   output))))
 

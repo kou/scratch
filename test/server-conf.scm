@@ -20,5 +20,5 @@
                   ,(lambda (proc x)
                      (proc (+ 1 x)))
                   2)
-    ("procedure5" ,map '(10 20) ,(lambda (x) (* 10 x)) (1 2))
+    ("procedure5" ,map (10 20) ,(lambda (x) (* 10 x)) (1 2))
     ))

@@ -55,9 +55,8 @@
     
     (define (handle-dsmp client input output)
       (dsmp-response (marshal-table-of self)
-                     input
-                     output
-                     (cut get-by-mount-point self <>)))
+                     input output
+                     :get-handler (cut get-by-mount-point self <>)))
     
     (selector-add! selector
                    (socket-fd (socket-of self))
