@@ -9,4 +9,5 @@
 (define (main args)
   (scratch-mail-main #`"dsmp://,|*where-server*|:,|*where-port*|"
                      *where-mount-point*
-                     (current-input-port)))
+                     (current-input-port)
+                     :http-base (get-optional (cdr args) #f)))

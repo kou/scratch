@@ -62,7 +62,7 @@
                               (append-params
                                (parse-body
                                 (open-input-string mail-body)
-                                `((http-base ,http-base)
+                                `(("http-base" ,http-base)
                                   ,@(make-id&action-params id action))
                                 default-param-name)
                                headers)))
