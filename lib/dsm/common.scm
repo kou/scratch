@@ -6,6 +6,7 @@
   (export x->dsm-header->string
           dsmp-write dsmp-request dsmp-response
           parse-dsm-header
+          get-dsm-object-from-remote
           version-of encoding-of length-of)
   )
 (select-module dsm.common)
@@ -38,8 +39,7 @@
     dsm-header))
 
 (define (x->dsm-header obj . keywords)
-  (make-dsm-header-from-string
-   (with-output-to-string (lambda () (write obj)))))
+  (apply make-dsm-header-from-string (marshal obj) keywords))
 
 (define (make-dsm-header-from-string str . keywords)
   (make-dsm-header`(("v" . ,dsm-version)
@@ -67,41 +67,60 @@
                         (string-split (string-trim-right header)
                                       dsm-delimiter))))
 
-(define (dsmp-core header make-body-proc handle-body-proc)
-  (let ((body (make-body-proc header)))
-    (handle-body-proc (dsm-header->string (make-dsm-header-from-string body))
-                      body)))
-
 (define (dsmp-write header body output)
   (display header output)
   (display body output)
   (flush output))
 
-(define (dsmp-request obj input output handle-object-proc . keywords)
+(define (get-dsm-body length input)
+  (read-from-string
+   (read-block length input)))
+
+(define (dsmp-request marshaled-obj input output handle-object-proc . keywords)
   (let-keywords* keywords ((command "get"))
-    (let ((marshaled-obj (marshal obj)))
-      (dsmp-write (x->dsm-header->string marshaled-obj :command command)
-                  marshaled-obj
-                  output)
-      (dsmp-core (parse-dsm-header (read-line input))
-                 (lambda (dsm-header)
-                   (marshal
-                    (read-from-string
-                     (read-block (length-of dsm-header) input))))
-                 (lambda (header body)
-                   (handle-object-proc header (unmarshal body)))))))
+    (dsmp-write (dsm-header->string
+                 (make-dsm-header-from-string marshaled-obj :command command))
+                marshaled-obj
+                output)
+    (let* ((dsm-header (parse-dsm-header (read-line input)))
+           (body (get-dsm-body (length-of dsm-header) input)))
+      (handle-object-proc body))))
+
+(define (get-dsm-object-from-remote obj in out . options)
+  (let-optionals* options ((command "get"))
+    (dsmp-request obj in out
+                  (lambda (object)
+                    (if (referenced-object? object)
+                        (lambda arg
+                          (p object)
+                          (eval-in-remote object arg in out))
+                        object))
+                  :command command)))
+
+(define (eval-in-remote obj arg in out)
+  (get-dsm-object-from-remote (cons obj arg) in out "eval"))
+
+(define (handle-dsmp-body command body make-body-proc)
+  (cond ((string=? "eval" command)
+         (p body)
+         (ct)
+         (apply (unmarshal (car body))
+                (cdr body)))
+        (else (make-body-proc body))))
 
 (define (dsmp-response header input output make-body-proc)
-  (dsmp-core (parse-dsm-header header)
-             (lambda (dsm-header)
-               (let ((body (read-from-string
-                            (read-block (length-of dsm-header) input))))
-                 (marshal
-                  (cond ((string=? "eval" (command-of dsm-header))
-                         (apply (unmarshal (car body))
-                                (cdr body)))
-                        (else (make-body-proc body))))))
-             (lambda (header body)
-               (dsmp-write header body output))))
+  (let* ((dsm-header (parse-dsm-header header))
+         (body (get-dsm-body (length-of dsm-header) input))
+         )
+    (let (
+         (marshalized-body (marshal
+                            (handle-dsmp-body (command-of dsm-header)
+                                              body
+                                              make-body-proc))))
+    (dsmp-write (dsm-header->string
+                 (make-dsm-header-from-string marshalized-body))
+                marshalized-body
+                output)))
+  )
 
 (provide "dsm/common")

@@ -1,6 +1,7 @@
 #!/usr/bin/env gosh
 
 (use test.unit)
+(use dsm.marshal)
 (use dsm.common)
 
 (define-assertion (assert-dsm-header header version encoding length command)
@@ -45,7 +46,7 @@
    )
   ("dsmp-response test"
    (assert-each assert-equal
-                `(1 "abc" ,(lambda () #f))
+                `(1 "abc" ,(lambda (x) x))
                 :prepare
                 (lambda (item)
                   (list (string-append (x->dsm-header->string item)

@@ -8,31 +8,32 @@
 (let* ((server-command "./test/server.scm")
        (server-host "localhost")
        (server-port 59102)
-;       (process #f))
-       (process (begin0
-                    (run-process server-command
-                                 "--host" server-host
-                                 "--port" server-port)
-                  (sys-nanosleep 500000000))))
+       (process #f))
   (define-test-case "Server test"
-;     (setup
-;      (lambda ()
-;        (set! process (run-process server-command
-;                                   "--host" server-host
-;                                   "--port" server-port))))
-;     (teardown
-;      (lambda ()
-;        (process-kill process)))
+     (setup
+      (lambda ()
+        (set! process
+              (begin0
+                  (run-process server-command
+                               "--host" server-host
+                               "--port" server-port)
+                (sys-nanosleep 500000000)))))
+     (teardown
+      (lambda ()
+        (process-kill process)))
     ("marshalizable object test"
      (let ((server (connect-server :host server-host
                                    :port server-port)))
        (for-each (lambda (key&value)
-                   (p key&value)
                    (assert-equal (cdr key&value) (server (car key&value))))
-                 marshalizable-key&value-alist)
+                 marshalizable-key&value-alist)))
+    ("marshal procedure test"
+     (let ((server (connect-server :host server-host
+                                   :port server-port)))
        (for-each (lambda (elem)
+                   (p elem)
+                   (ct)
                    (assert-equal (caddr elem)
-                                 (apply (server (car elem)) (cdddr elem))))
-                 procedure-list)
-       ))
+                                 (apply (server (car elem)) #?=(cdddr elem))))
+                 procedure-list)))
     ))

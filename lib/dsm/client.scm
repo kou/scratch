@@ -25,6 +25,7 @@
     (display (x->dsm-header->string obj :command command) out)
     (display obj out)
     (flush out)
+    (p obj)
     (let* ((dsm-header (parse-dsm-header (read-line in)))
            (remote-obj (read-from-string
                         (read-block (length-of dsm-header) in))))
@@ -34,22 +35,12 @@
           remote-obj))))
 
 (define (get-from-remote obj in out . options)
-  (let-optionals* options ((command "get"))
-    (dsmp-request obj in out
-                  (lambda (header object)
-                    (if (referenced-object? object)
-                        (lambda arg
-                          (eval-in-remote object arg in out))
-                        object))
-                  :command command)))
+  (apply get-dsm-object-from-remote (marshal obj) in out options))
 
 (define (get-by-mount-point client-socket mount-point)
   (let ((in (socket-input-port client-socket))
         (out (socket-output-port client-socket)))
-    (get-from-remote mount-point in out)))
-
-(define (eval-in-remote obj arg in out)
-  (get-from-remote (cons obj arg) in out "eval"))
+    #?=(get-from-remote mount-point in out)))
 
 (define (connect-server . keywords)
   (let ((remote (apply make <dsm-client> keywords)))

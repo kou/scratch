@@ -1,8 +1,10 @@
 (define-module dsm.marshal
   (use srfi-1)
   (use srfi-10)
+  (use util.list)
   (use gauche.collection)
-  (export marshalizable? marshal unmarshal referenced-object?)
+  (export marshalizable? marshal unmarshal referenced-object?
+          ct)
   )
 (select-module dsm.marshal)
 
@@ -31,7 +33,7 @@
 ;   (and (is-a? self <reference-object>)
 ;        (= (id-of self) (id-of other))))
 
-(define-values (id-get id-ref)
+(define-values (id-get id-ref ct)
   (let ((obj->id (make-hash-table 'eq?))
         (id->obj (make-hash-table 'eqv?))
         (cnt 0))
@@ -47,7 +49,10 @@
               (if (= id 0)
                   #f
                   (or (hash-table-get id->obj id #f)
-                      (error "no object with id: " id)))))))
+                      (error "no object with id: " id))))
+            (lambda ()
+              (p (hash-table->alist id->obj)))
+            )))
 
 (define-method marshalizable? (obj)
   #f)
@@ -56,6 +61,9 @@
   #t)
 
 (define-method marshalizable? ((obj <symbol>))
+  #t)
+
+(define-method marshalizable? ((obj <char>))
   #t)
 
 (define-method marshalizable? ((obj <string>))
@@ -67,28 +75,34 @@
 (define-method marshalizable? ((obj <keyword>))
   #t)
 
-(define (recursive-marshalizable? objs)
-  (fold (lambda (obj ret) (and ret (marshalizable? obj)))
-        #t
-        objs))
-  
 (define-method marshalizable? ((lst <list>))
-  (recursive-marshalizable? lst))
+  #t)
 
 (define-method marshalizable? ((vec <vector>))
-  (recursive-marshalizable? vec))
+  #t)
 
-(define-method marshal (obj)
-  (let ((out (open-output-string))) 
-    (write (if (marshalizable? obj)
-               obj
-               (make <reference-object> :id (id-get obj)))
-           out)
+(define-method marshal (object)
+  (define (make-marshalized-object obj)
+    (if (and (marshalizable? obj)
+             (is-a? obj <collection>))
+        (map-to (class-of obj)
+                make-marshalized-object
+                obj)
+        (if (marshalizable? obj)
+            obj
+            (make <reference-object> :id (id-get obj)))))
+
+  (let ((out (open-output-string)))
+    (write (make-marshalized-object object) out)
     (get-output-string out)))
 
 (define-method unmarshal (obj)
-  (if (is-a? obj <reference-object>)
-      (id-ref (id-of obj))
-      obj))
-                                     
+  (if (is-a? obj <collection>)
+      (map-to (class-of obj)
+              unmarshal
+              obj)
+      (if (is-a? obj <reference-object>)
+          (id-ref (id-of obj))
+          obj)))
+
 (provide "dsm/marshal")
