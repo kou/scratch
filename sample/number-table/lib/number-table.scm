@@ -6,8 +6,8 @@
    make-numbers sort-numbers flatten
    sort-number-table available-ways empty-cell-index
    make-number-table row-number-of column-number-of
-   move! swap-cell! get-cell set-cell! clear? shuffle-table!)
-  )
+   move! swap-cell! get-cell set-cell!
+   can-move? clear? shuffle-table!))
 (select-module number-table)
 
 (random-source-randomize! default-random-source)
@@ -79,12 +79,22 @@
   (receive (x y)
       (empty-cell-index table)
     (case way
-      ((east) (swap-cell! table x y (+ x 1) y))
       ((west) (swap-cell! table x y (- x 1) y))
       ((north) (swap-cell! table x y x (- y 1)))
+      ((east) (swap-cell! table x y (+ x 1) y))
       ((south) (swap-cell! table x y x (+ y 1)))
       (else (error "bad way" way)))
     table))
+
+(define (can-move? table way)
+  (receive (west-ok? north-ok? east-ok? south-ok?)
+      (available-ways table)
+    (case way
+      ((west) west-ok?)
+      ((north) north-ok?)
+      ((east) east-ok?)
+      ((south) south-ok?)
+      (else #f))))
 
 (define (swap-cell! table x1 y1 x2 y2)
   (let* ((value1 (get-cell table x1 y1))

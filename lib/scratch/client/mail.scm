@@ -9,8 +9,8 @@
   (use rfc.822)
   (use rfc.base64)
   (use rfc.quoted-printable)
-  (export scratch-mail-main)
-  )
+  (use dsm.client)
+  (export scratch-mail-main))
 (select-module scratch.client.mail)
 
 (define (port->header-list&body in)
@@ -46,7 +46,7 @@
               (or (and md (md 2))
                   action)))))
 
-(define (scratch-mail-main client mount-point mail . args)
+(define (scratch-mail-main uri mount-point mail . args)
   (let-keywords* args ((default-param-name "body"))
     (let ((in (cond ((input-port? mail) mail)
                     ((string? mail) (open-input-string mail))
@@ -55,7 +55,8 @@
       (let*-values (((headers mail-body) (port->header-list&body in))
                     ((id action)
                      (id&action (rfc822-header-ref headers "subject" ""))))
-        (let* ((dispatch (client mount-point))
+        (let* ((server (dsm-connect-server uri))
+               (dispatch (server mount-point))
                (result (apply dispatch id action type
                               (append-params
                                (parse-body

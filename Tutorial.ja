@@ -461,7 +461,6 @@ hrefはキーワード引数:new-sessionに#tを指定することによってク
 
   #!/usr/bin/env gosh
 
-  (use dsm.server)
   (use scratch.server)
   (use login-count-servlet)
 
@@ -469,7 +468,7 @@ hrefはキーワード引数:new-sessionに#tを指定することによってク
   (define *login-count-mount-point* "/login-count")
 
   (define (main args)
-    (let* ((server (make-scratch-server :port *login-count-port*)))
+    (let* ((server (make-scratch-server #`"dsmp://:,|*login-count-port*|")))
       (add-mount-point! server
                         *login-count-mount-point*
                         (make-login-count-servlet))
@@ -488,7 +487,6 @@ add-mount-point!でlogin-count用のサーブレットをマウントしま
 
   #!/usr/bin/env gosh
 
-  (use dsm.client)
   (use scratch.client.cgi)
 
   (define *login-count-server* "localhost")
@@ -496,15 +494,13 @@ add-mount-point!でlogin-count用のサーブレットをマウントしま
   (define *login-count-mount-point* "/login-count")
 
   (define (main args)
-    (scratch-cgi-main (connect-server :host *login-count-server*
-                                      :port *login-count-port*)
+    (scratch-cgi-main #`"dsmp://,|*login-count-server*|:,|*login-count-port*|"
                       *login-count-mount-point*
                       :debug #t))
 
-scratchサーバが起動しているホスト名と先ほど設定したポートを
-指定してconnect-serverでサーバに接続します．scratch-cgi-main
-に先ほど設定したマウントポイントを指定します．後は，ライブラ
-リで面倒を見てくれます．
+scratch-cgi-main にscratchサーバのURIと，先ほど設定したマウ
+ントポイントを指定します．後は，ライブラリで面倒を見てくれま
+す．
 
 === 実行
 

@@ -6,6 +6,8 @@
   (use scratch.view.http))
 (select-module where.servlet.view.http)
 
+(use-cookie-only #f)
+
 (load-esm-files "where/servlet/view/http/*.esm")
 
 (define (move-to where)

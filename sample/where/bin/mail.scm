@@ -1,6 +1,5 @@
 #!/usr/bin/env gosh
 
-(use dsm.client)
 (use scratch.client.mail)
 
 (define *where-server* "localhost")
@@ -8,7 +7,6 @@
 (define *where-mount-point* "/where")
 
 (define (main args)
-  (scratch-mail-main (connect-server :host *where-server*
-                                     :port *where-port*)
+  (scratch-mail-main #`"dsmp://,|*where-server*|:,|*where-port*|"
                      *where-mount-point*
                      (current-input-port)))

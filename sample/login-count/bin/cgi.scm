@@ -1,6 +1,5 @@
 #!/usr/bin/env gosh
 
-(use dsm.client)
 (use scratch.client.cgi)
 
 (define *login-count-server* "localhost")
@@ -8,7 +7,6 @@
 (define *login-count-mount-point* "/login-count")
 
 (define (main args)
-  (scratch-cgi-main (connect-server :host *login-count-server*
-                                    :port *login-count-port*)
+  (scratch-cgi-main #`"dsmp://,|*login-count-server*|:,|*login-count-port*|"
                     *login-count-mount-point*
                     :debug #t))

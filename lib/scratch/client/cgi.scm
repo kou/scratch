@@ -10,8 +10,8 @@
   (use util.list)
   (use text.tree)
   (use text.html-lite)
-  (export scratch-cgi-main)
-  )
+  (use dsm.client)
+  (export scratch-cgi-main))
 (select-module scratch.client.cgi)
 
 (define (add-meta-info params default-langs)
@@ -65,18 +65,19 @@
       (get-optional default #f)
       (reverse langs))))
 
-(define (scratch-cgi-main client mount-point . args)
+(define (scratch-cgi-main uri mount-point . args)
   (let-keywords* args ((error-proc (cut scratch-error-proc <>
                                         (get-keyword :debug args #f)))
                        (default-langs (reverse '("ja" "en"))))
     (cgi-main
      (lambda (params)
-       (let* ((params (map (lambda (elem)
+       (let* ((server (dsm-connect-server uri))
+              (params (map (lambda (elem)
                              (map (lambda (x)
                                     (ces-convert (x->string x) "*JP"))
                                   elem))
                            params))
-              (dispatch (client mount-point))
+              (dispatch (server mount-point))
               (id (cgi-get-parameter (x->string *scratch-id-key*)
                                      params
                                      :convert string->number))

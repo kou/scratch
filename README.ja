@@ -102,24 +102,23 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
 
   #!/usr/local/bin/gosh
 
-  (use dsm.client)
   (use scratch.client.cgi)
 
   (define (main args)
-    (scratch-cgi-main (connect-server :host "scratchサーバが動いているホスト名"
-                                      :port ポート番号)
+    (scratch-cgi-main "dsmp://scratchサーバが動いているホスト名:ポート番号"
                       "サーブレットのマウントポイント"))
 
 === scratchサーバ
 
-scratchサーバはホスト名とポート番号で識別されます．よって，
-scratchサーバを作成するときは以下のようになります．
+scratchサーバはURIで識別されます．よって，scratchサーバを作
+成するときは以下のようになります．
 
-  (make-scratch-server :host "localhost" :port 5969)
+  (make-scratch-server "dsmp://ホスト名:ポート番号")
 
 ホスト名/ポート番号はともに省略することができ，省略された場
-合は"localhost"/59102を指定したものとみなされます．これは
-<dsm-server>の初期値に依存しています．
+合は"localhost"/0（空いているポート番号を使うという意味）を
+指定したものとみなされます．これは<dsm-server>の初期値に依存
+しています．
 
 scratchサーバには複数のサーブレットをマウントすることができ
 ます．各サーブレットはマウントポイントによって識別されます．
@@ -139,11 +138,10 @@ scratchサーバを起動するスクリプトは以下のようになるでしょう．
 
   #!/usr/bin/env gosh
 
-  (use dsm.server)
   (use scratch.server)
 
   (define (main args)
-    (let ((server (make-scratch-server :port 5963)))
+    (let ((server (make-scratch-server "dsmp://:5963")))
       (add-mount-point! server "/sample" (make-sample-servlet))
       (start-scratch-server server)))
 

@@ -6,7 +6,7 @@
 (use dsm.client)
 
 (define *number-table-server* "localhost")
-(define *number-table-port* 5969)
+(define *number-table-port* 5976)
 
 (define _html-escape-string html-escape-string)
 (define (html-escape-string obj)
@@ -45,7 +45,7 @@
               (html:td "")))))
 
 (define (navi-link title params)
-  (html:a :href (tree->string `(,#`",|*program-name*|?"
+  (html:a :href (tree->string `(,#`",|program-name|?"
                                 ,(string-join
                                   (map (lambda (param)
                                          #`",(car param)=,(cdr param)")
@@ -53,12 +53,17 @@
                                   ";")))
           title))
 
+(define program-name #f)
+
 (define (main args)
   (cgi-main
    (lambda (params)
-     (let* ((client (connect-server :host *number-table-server*
-                                    :port *number-table-port*))
-            (intep ((client "/start")))
+     (set! program-name (cgi-get-parameter "SCRIPT_NAME" params
+                                           :default *program-name*))
+     (let* ((server
+             (dsm-connect-server
+              #`"dsmp://,|*number-table-server*|:,|*number-table-port*|"))
+            (intep ((server "/start")))
             (id (cgi-get-parameter "id" params :convert string->number))
             (way (cgi-get-parameter "way" params)))
        (if id
@@ -71,7 +76,7 @@
            (html:head (html:title "Number Table Example"))
            (html:body
             (html:h1 "Number Table")
-            (html:p (html:a :href *program-name* "NEW GAME")
+            (html:p (html:a :href program-name "NEW GAME")
                     "/"
                     (intep "count"))
             (if (intep "clear?") (html:h2 "CLEAR!!!") "")

@@ -3,8 +3,10 @@
 (use dsm.server)
 (use number-table)
 
+(define *port* 5976)
+
 (define (main args)
-  (let* ((server (make-dsm-server :port 5969))
+  (let* ((server (make-dsm-server #`"dsmp://:,|*port*|"))
          (marshal-table (with-module dsm.server (marshal-table-of server)))
          (id-get (with-module marshal id-get))
          (id-ref (with-module marshal id-ref)))
@@ -16,9 +18,15 @@
           (case (string->symbol (x->string command))
             ((show) table)
             ((move)
-             (inc! count)
-             (move! table
-                    (make-keyword (x->string (car args)))))
+             (if (null? args)
+               "usage: move way"
+               (let ((way (string->symbol (x->string (car args)))))
+                 (if (can-move? table way)
+                   (begin
+                     (move! table way)
+                     (inc! count)
+                     table)
+                   #`"can't move to the ,|way|"))))
             ((clear?) (clear? table))
             ((available-ways) (call-with-values
                                   (lambda () (available-ways table))
@@ -32,4 +40,5 @@
         dispatch))
 
     (add-mount-point! server "/start" start-up)
-    (start-dsm-server server)))
+    (dsm-server-start! server)
+    (dsm-server-join! server)))

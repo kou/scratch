@@ -1,12 +1,10 @@
 (define-module scratch.server
-  (extend scratch.scratch)
+  (extend dsm.server scratch.scratch)
   (use marshal)
-  (use dsm.server)
-  (use dsm.common)
   (use scratch.servlet)
   (export make-scratch-server add-mount-point! get-by-mount-point
-          start-scratch-server stop-scratch-server)
-  )
+          add-mount-point!
+          scratch-server-start! scratch-server-stop!))
 (select-module scratch.server)
 
 (define-class <scratch-server> ()
@@ -14,10 +12,10 @@
 
 (define-method initialize ((self <scratch-server>) args)
   (next-method)
-  (slot-set! self 'dsm-server (apply make-dsm-server args)))
+  (set! (dsm-server-of self) (apply make-dsm-server args)))
 
-(define (make-scratch-server . keywords)
-  (apply make <scratch-server> keywords))
+(define (make-scratch-server uri . keywords)
+  (apply make <scratch-server> uri keywords))
 
 (define-method add-mount-point! ((self <scratch-server>) mount-point servlet)
   (add-mount-point! (dsm-server-of self) mount-point
@@ -26,11 +24,11 @@
 (define-method get-by-mount-point ((self <scratch-server>) mount-point)
   (get-by-mount-point (dsm-server-of self) mount-point))
 
-(define (start-scratch-server server)
-  (start-dsm-server (dsm-server-of server))
+(define (scratch-server-start! server)
+  (dsm-server-start! (dsm-server-of server))
   (dsm-server-join! (dsm-server-of server)))
 
-(define (stop-scratch-server server)
-  (stop-dsm-server (dsm-server-of server)))
+(define (scratch-server-stop! server)
+  (dsm-server-stop! (dsm-server-of server)))
   
 (provide "scratch/server")

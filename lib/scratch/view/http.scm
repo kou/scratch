@@ -12,8 +12,7 @@
           input
           h hd u ue
           href full-href form alist->attributes
-          user-name-input password-input)
-  )
+          user-name-input password-input))
 (select-module scratch.view.http)
 
 (define use-cookie-only (make-parameter #t))

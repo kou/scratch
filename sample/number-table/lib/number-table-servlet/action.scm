@@ -40,7 +40,10 @@
 (define (do-move)
   (let* ((way (get-param "way" :convert string->symbol)))
     (set-value! 'count (+ 1 (count)))
-    (move! (table) way)
+    (if (can-move? (table) way)
+      (move! (table) way)
+      (set-cycle-value!
+       :message #`"can't move to the ,|way|."))
     (update-value!)
     (do-main)))
 
