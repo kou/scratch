@@ -1,6 +1,6 @@
 (define-module scratch.servlet
   (extend scratch.common)
-  (use dsm.marshal)
+  (use marshal)
   (use scratch.session)
   (use scratch.user.manager)
   (use gauche.parameter)

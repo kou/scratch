@@ -1,6 +1,6 @@
 (define-module scratch.server
+  (use marshal)
   (use dsm.server)
-  (use dsm.marshal)
   (use dsm.common)
   (use scratch.servlet)
   (export make-scratch-server add-mount-point! get-by-mount-point

@@ -1,7 +1,9 @@
 #!/usr/bin/env gosh
 
 (use test.unit)
+(use dsm.server)
 (use scratch.server)
+(use scratch.servlet)
 
 (define-macro (assert-each-by-alist prepare-proc . keywords)
   (let-keywords* keywords ((assert-proc assert-equal)
@@ -11,7 +13,13 @@
                   :prepare (lambda (item)
                              (,prepare-proc (car item) (cdr item))))))
 
-'(let ((server #f))
+(define-class <stub-servlet> ()
+  ((value :accessor value-of :init-keyword :value)))
+
+(define-method dispatch ((self <stub-servlet>) id action type . args)
+  (value-of self))
+
+(let ((server #f))
   (define-test-case "scratch server test"
     (setup
      (lambda () (set! server (make-scratch-server :port 7890))))
@@ -21,32 +29,14 @@
        (set! server #f)))
     ("mount-point test"
      (assert-each-by-alist (lambda (key value)
-                             (add-mount-point! server key value)
+                             (add-mount-point! server key
+                                               (make <stub-servlet>
+                                                 :value value))
                              (list value
-                                   (get-by-mount-point server key)))
+                                   ((get-by-mount-point server key) #f #f #f)))
                            :alist `(("/integer" . 1)
                                     ("/string" . "string")
                                     ("/list" . (1 #t #()))
                                     ("/procedure" . ,(lambda () #f))
                                     )))
-    ("store/restore test"
-     (let ((test-data (list 1
-                            "string"
-                            '()
-                            (lambda () #f)
-                            )))
-       (assert-each assert-equal test-data
-                    :prepare (lambda (item)
-                               (list item
-                                     (restore server
-                                              (store server item)))))
-       (let ((store (get-by-mount-point server
-                                        (with-module scratch.common
-                                          *scratch-store-mount-point*)))
-             (restore (get-by-mount-point server
-                                          (with-module scratch.common
-                                            *scratch-restore-mount-point*))))
-         (assert-each assert-equal test-data
-                      :prepare (lambda (item)
-                                 (list item (restore (store item))))))))
     ))
