@@ -7,8 +7,8 @@
       (for-each print res)
       (print res)))
 
-(define (display-prompt)
-  (display "> "))
+(define (display-prompt count)
+  (display #`",|count|> "))
 
 (define (parse-input input)
   (let ((tokens (string-split input #/\s+/)))
@@ -22,9 +22,9 @@
           (command #f)
           (args '()))
       (do ((res (intep "show") (apply intep command args)))
-          ((intep "clear?") (print res (intep "clear?") "clear"))
+          ((intep "clear?") (print "CLEAR!!!!"))
         (display-result res)
-        (display-prompt)
+        (display-prompt (intep "count"))
         (set!-values (command args) (parse-input (read-line)))
         (print command)))))
 

@@ -106,13 +106,21 @@
           (flatten table)))
 
 (define (shuffle-table! table)
-  (let ((max-num (row-number-of table)))
-    (dotimes (i (* max-num max-num (+ 1 (random-integer max-num))))
-      (swap-cell! table
-                  (random-integer max-num)
-                  (random-integer max-num)
-                  (random-integer max-num)
-                  (random-integer max-num))))
+  (let* ((max-num (row-number-of table))
+         (shuffle-time (* max-num max-num max-num
+                          (+ 1 (random-integer max-num))))
+         (way-table (hash-table 'eqv?
+                                '(0 . :west)
+                                '(1 . :north)
+                                '(2 . :east)
+                                '(3 . :south))))
+    (dotimes (i shuffle-time)
+      (call-with-values (lambda () (available-ways table))
+        (lambda ways
+          (let ((way (random-integer (length ways))))
+            (if (list-ref ways way)
+                (move! (hash-table-get way-table way)
+                       table)))))))
   table)
 
 (provide "number/table")

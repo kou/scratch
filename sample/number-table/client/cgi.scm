@@ -66,8 +66,10 @@
          ,(html:html
            (html:head (html:title "Number Table Example"))
            (html:body
-            (html:a :href *program-name* "NEW GAME")
+            (html:h1 "Number Table")
+            (html:p (html:a :href *program-name* "NEW GAME")
+                    "/"
+                    (intep "count"))
             (if (intep "clear?") (html:h2 "CLEAR!!!") "")
-            (html:h2 "Number Table")
             (number-table->html:table (intep "show"))
             (apply navigator id (intep "available-ways")))))))))
