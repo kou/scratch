@@ -13,4 +13,5 @@
     (add-mount-point! server
                       *login-count-mount-point*
                       (make-login-count-servlet))
-    (scratch-server-start! server)))
+    (scratch-server-start! server)
+    (scratch-server-join! server)))

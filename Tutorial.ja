@@ -472,14 +472,17 @@ hrefはキーワード引数:new-sessionに#tを指定することによってク
       (add-mount-point! server
                         *login-count-mount-point*
                         (make-login-count-servlet))
-      (start-scratch-server server)))
+      (scratch-server-start! server)
+      (scratch-server-join! server)))
 
 make-scratch-serverにはキーワード引数:portを指定してどのポー
 トでサーバを起動するかを指定します．サーバを作成したら
 add-mount-point!でlogin-count用のサーブレットをマウントしま
 す．マウントポイントはscratchクライアントがアクセスする際に
-使用されます．start-scratch-serverでscratchクライアントから
-の要求を受け付ける準備は完了です．
+使用されます．scratch-server-start!でscratchクライアントから
+の要求を受け付ける準備は完了です．scratch-server-join!は
+scratchサーバが終了するまでプログラムを終了しないようにする
+手続きです．
 
 === scratchクライアント
 

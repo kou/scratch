@@ -12,4 +12,5 @@
     (add-mount-point! server
                       *where-mount-point*
                       (make-where-servlet))
-    (scratch-server-start! server)))
+    (scratch-server-start! server)
+    (scratch-server-join! server)))

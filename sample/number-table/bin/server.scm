@@ -12,4 +12,5 @@
     (add-mount-point! server
                       *number-table-mount-point*
                       (make-number-table-servlet))
-    (scratch-server-start! server)))
+    (scratch-server-start! server)
+    (scratch-server-join! server)))
