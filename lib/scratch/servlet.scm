@@ -68,8 +68,8 @@
                                         ((app-gettext) 'set-locale!
                                          (get-param "language" #f)))
                                       (app-gettext))
-                                    (apply make-gettext (domain-of self)
-                                           (get-param "language" '())))))
+                                    (make-gettext (domain-of self)
+                                                  (get-param "language" #f)))))
         (clear! (session))
         (begin0
             (make-response self
