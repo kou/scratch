@@ -16,13 +16,21 @@
           (let* ((search-key (car key-info))
                  (regist-key (cadr key-info))
                  (value (with-module www.cgi
-                          (get-meta search-key))))
+                          (if (pair? search-key)
+                            (do ((keys search-key (cdr keys))
+                                 (result #f (get-meta (car keys))))
+                                ((or (null? keys)
+                                     result)
+                                 result)
+                              ;; do nothing
+                              )
+                            (get-meta search-key)))))
             (if value
                 (cons (list regist-key value)
                       prev)
                 prev)))
         params
-        '(("SCRIPT_NAME" "script-name")
+        '((("REQUEST_URI" "SCRIPT_NAME") "script-name")
           ("HTTP_HOST" "host-name"))))
 
 (define (scratch-cgi-main client mount-point . args)
