@@ -103,22 +103,22 @@
                                     (normalize-charset output-encoding))))
               (output-encoding
                (rxmatch-if (rxmatch #/\S+\;\s*charset=(\S+)/i content-type)
-                   (charset)
+                   (_ charset)
                  charset
                  output-encoding)))
-         (parameterize ((cgi-output-character-encoding output-encoding))
-           `(,(cond ((get-keyword :location header-info #f)
-                     => (cut make-cgi-header
-                             :cookies cookies
-                             :status "MOVED"
-                             :Location <>))
-                    (else
-                     (list
-                      (make-cgi-header :cookies cookies
-                                       :status status
-                                       :content-type content-type
-                                       :Content-Length (string-size body))
-                      body)))))))
+         (cgi-output-character-encoding output-encoding)
+         `(,(cond ((get-keyword :location header-info #f)
+                   => (cut make-cgi-header
+                           :cookies cookies
+                           :status "MOVED"
+                           :Location <>))
+                  (else
+                   (list
+                    (make-cgi-header :cookies cookies
+                                     :status status
+                                     :content-type content-type
+                                     :Content-Length (string-size body))
+                    body))))))
      :merge-cookies #t
      :on-error error-proc)))
 
