@@ -3,8 +3,8 @@
   (use srfi-10)
   (use util.list)
   (use gauche.collection)
-  (export marshalizable? marshal unmarshal reference-object?
-          using-same-table?
+  (export marshalizable? reference-object? using-same-table?
+          marshal unmarshal
           make-marshal-table)
   )
 (select-module dsm.marshal)
@@ -140,5 +140,6 @@
             obj)))
 
   (rec object))
+
 
 (provide "dsm/marshal")

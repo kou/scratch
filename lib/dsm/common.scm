@@ -5,11 +5,11 @@
   (use gauche.charconv)
   (use dsm.marshal)
   (export x->dsm-header->string
-          dsmp-write dsmp-request dsmp-response
-          parse-dsm-header
+          dsmp-request dsmp-response
           get-dsm-object-from-remote
-          get-sock-host&port eval-in-remote
-          version-of encoding-of length-of)
+          eval-in-remote
+          version-of encoding-of length-of
+          make-marshal-table-using-socket)
   )
 (select-module dsm.common)
 
@@ -23,6 +23,16 @@
    (length :init-keyword :length :accessor length-of)
    (command :init-keyword :command :accessor command-of :init-value "get")))
 
+(define (get-sock-host&port socket)
+  (let* ((md (rxmatch #/(.*):(\d+)$/
+                      (sockaddr-name (socket-address socket)))))
+    (list (md 1)
+          (string->number (md 2)))))
+
+(define (make-marshal-table-using-socket socket)
+  (apply make-marshal-table
+         (get-sock-host&port socket)))
+
 (define (make-dsm-header alist)
   (define (set-dsm-header-slot! header key value)
     (cond ((rxmatch #/^v/ key)
@@ -33,6 +43,7 @@
            (slot-set! header 'command value))
           ((rxmatch #/^l/ key)
            (slot-set! header 'length (x->number value)))))
+
   (let ((dsm-header (make <dsm-header>)))
     (for-each (lambda (elem)
                 (set-dsm-header-slot! dsm-header
@@ -61,12 +72,12 @@
 (define (x->dsm-header->string table obj . keywords)
   (dsm-header->string (apply x->dsm-header table obj keywords)))
 
-(define (parse-dsm-header header)
+(define (parse-dsm-header str)
   (make-dsm-header (map (lambda (elem)
                           (let ((splited-elem (string-split elem "=")))
                             (cons (car splited-elem)
                                   (cadr splited-elem))))
-                        (string-split (string-trim-right header)
+                        (string-split (string-trim-right str)
                                       dsm-delimiter))))
 
 (define (dsmp-write header body output)
@@ -74,21 +85,29 @@
   (display body output)
   (flush output))
 
-(define (get-dsm-body length input)
+(define (read-dsmp input)
+  (let ((header (read-dsmp-header input)))
+    (values header
+            (read-dsmp-body (length-of header) input))))
+
+(define (read-dsmp-header input)
+  (parse-dsm-header (read-line input)))
+
+(define (read-dsmp-body length input)
   (read-from-string
    (read-block length input)))
 
-(define (dsmp-request marshaled-obj input output handle-object-proc . keywords)
+(define (dsmp-request marshaled-obj input output response-handler . keywords)
   (let-keywords* keywords ((command "get"))
 ;    (p marshaled-obj output)
     (dsmp-write (dsm-header->string
                  (make-dsm-header-from-string marshaled-obj :command command))
                 marshaled-obj
                 output)
-    (let* ((dsm-header (parse-dsm-header (read-line input)))
-           (body (get-dsm-body (length-of dsm-header) input)))
-;      (p (command-of dsm-header) body input)
-      (handle-object-proc dsm-header body))))
+    (receive (header body)
+        (read-dsmp input)
+;      (p (command-of header) body input)
+      (response-handler header body))))
 
 (define (get-dsm-object-from-remote object table in out get-handler . options)
   (let-optionals* options ((command "get"))
@@ -123,7 +142,7 @@
 
 (define (dsmp-response header table input output make-body-proc)
   (let* ((dsm-header (parse-dsm-header header))
-         (body (get-dsm-body (length-of dsm-header) input))
+         (body (read-dsmp-body (length-of dsm-header) input))
          )
     (let (
          (marshalized-body (marshal
@@ -140,10 +159,4 @@
                 output)))
   )
 
-(define (get-sock-host&port sock)
-  (let* ((md (rxmatch #/(.*):(\d+)$/
-                      (sockaddr-name (socket-address sock)))))
-    (list (md 1)
-          (string->number (md 2)))))
-    
 (provide "dsm/common")

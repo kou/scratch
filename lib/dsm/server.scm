@@ -24,8 +24,7 @@
                                               (port-of self)
                                               :reuse-addr? #t))
   (slot-set! self 'marshal-table
-             (apply make-marshal-table
-                    (get-sock-host&port (socket-of self))))
+             (make-marshal-table-using-socket (socket-of self)))
   )
 
 (define (make-dsm-server . keywords)
