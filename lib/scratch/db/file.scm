@@ -3,6 +3,8 @@
   (use marshal)
   (use util.list)
   (use file.util)
+  (use srfi-1)
+  (use gauche.collection)
   (export <scratch-db-file>))
 (select-module scratch.db.file)
 

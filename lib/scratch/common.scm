@@ -86,14 +86,8 @@
 
 (define-method get-id ()
   (get-id (session)))
-(define-method get-id (session)
-  (get-value session *scratch-id-key* #f))
-(define-method set-id! ()
-  (set-id! (session)))
-(define-method set-id! (session)
-  (set-id! session (id-of session)))
-(define-method set-id! (session id)
-  (set-value! session *scratch-id-key* id))
+(define-method set-id! (id)
+  (set-id! (session) id))
 
 (define (get-action)
   (get-param *scratch-action-key*))

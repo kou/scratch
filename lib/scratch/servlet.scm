@@ -36,7 +36,7 @@
 (define-method initialize ((self <scratch-servlet>) args)
   (next-method)
   (make-directory* (sys-dirname (session-store-filename-of self)))
-  (restore (db-of self)))
+  (restore self))
 
 (define (get-module module-name)
   (or (find-module module-name)
@@ -78,7 +78,6 @@
 
 (define (register-session! servlet session)
   (let ((id (id-get (session-table-of servlet) session)))
-    (set! (id-of session) id)
     (set-id! session id)))
 
 (define-method store ((self <scratch-servlet>))
@@ -90,7 +89,7 @@
   (restore (db-of self))
   (if (file-exists? (session-store-filename-of self))
       (call-with-input-file (session-store-filename-of self)
-        (cut restore-session servlet <>))))
+        (cut restore-session self <>))))
 
 (define (store-session servlet out)
   (let ((table (session-table-of servlet)))

@@ -73,18 +73,22 @@
   (attributes->string (alist->attributes alist)))
 
 (define (href . params)
-  (let-values (((id action params) (apply generate-id&action params)))
-    (h (string-append (get-param "script-name" "")
-                      "?"
-                      (alist->params-string
-                       `(,@(if use-cookie-only
+  (let ((new-session? (get-keyword :new-session params #f)))
+    (let-values (((id action params) (apply generate-id&action params)))
+      (h (string-append (get-param "script-name" "")
+                        "?"
+                        (alist->params-string
+                         `(,@(if (and (not new-session?)
+                                      (use-cookie-only))
                                '()
                                (list (list *scratch-id-key* id)))
-                         ,@(if (or (equal? action *scratch-default-action-name*)
-                                   (equal? action (default-action)))
+                           ,@(if (or (equal? action
+                                             *scratch-default-action-name*)
+                                     (equal? action
+                                             (default-action)))
                                '()
                                (list (list *scratch-action-key* action)))
-                         ,@(slices params 2)))))))
+                           ,@(slices params 2))))))))
 
 (define (full-href . params)
   (let ((host (get-param "host-name" "localhost")))
@@ -96,23 +100,25 @@
                   " />")))
 
 (define (form . attrs)
-  (let-values (((id action attrs) (apply generate-id&action attrs)))
-    (tree->string `("<form action=\""
-                    ,(get-param "script-name" "")
-                    "\" "
-                    ,(alist->attributes-string (slices attrs 2))
-                    ">\n"
-                    ,@(if use-cookie-only
+  (let ((new-session? (get-keyword :new-session attrs #f)))
+    (let-values (((id action attrs) (apply generate-id&action attrs)))
+      (tree->string `("<form action=\""
+                      ,(get-param "script-name" "")
+                      "\" "
+                      ,(alist->attributes-string (slices attrs 2))
+                      ">\n"
+                      ,@(if (and (not new-session?)
+                                 (use-cookie-only))
                           '()
                           (list (input :type 'hidden
                                        :name *scratch-id-key*
                                        :value id)))
-                    ,@(if (or (equal? action *scratch-default-action-name*)
-                              (equal? action (default-action)))
+                      ,@(if (or (equal? action *scratch-default-action-name*)
+                                (equal? action (default-action)))
                           '()
                           (list (input :type 'hidden
                                        :name *scratch-action-key*
-                                       :value action)))))))
+                                       :value action))))))))
 
 (define (user-name-input . attrs)
   (apply input

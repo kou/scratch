@@ -1,10 +1,14 @@
 (define-module scratch.session
   (extend scratch.scratch)
   (use util.list)
+  (use srfi-1)
+  (use gauche.collection)
+  (use marshal)
   (use scratch.common)
   (export make-scratch-session
-          id-of response-info-list
+          response-info-list
           get-value set-value! delete-value! value-exists?
+          get-id se-id!
           get-response-value set-response-value!
           delete-response-value! response-value-exists?
           get-cycle-value set-cycle-value!
@@ -18,9 +22,21 @@
 (define (make-cycle-values)
   (make-hash-table 'eq?))
 
+(define (x->keyword x)
+  (if (keyword? x)
+    x
+    (make-keyword (x->string x))))
+
+(define (x->symbol x)
+  (if (symbol? x)
+    x
+    (string->symbol (x->string x))))
+
+(define (keyword->symbol keyword)
+  (string->symbol (keyword->string keyword)))
+
 (define-class <scratch-session> ()
-  ((id :accessor id-of)
-   (values :accessor values-of :init-form (make-hash-table 'eq?))
+  ((values :accessor values-of :init-form (make-hash-table 'eq?))
    (response-values :accessor response-values-of
                     :init-thunk make-response-values)
    (cycle-values :accessor cycle-values-of
@@ -33,8 +49,6 @@
    ))
 
 (define (make-scratch-session . init-values)
-  (define (keyword->symbol keyword)
-    (string->symbol (keyword->string keyword)))
   (define (compute-session-args)
     (if (and (not (null? init-values))
              (or (eq? #f (car init-values))
@@ -51,11 +65,30 @@
               (slices init-values 2))
     session))
 
+(define-method marshalizable? ((self <scratch-session>))
+  #t)
+
+(define-reader-ctor '<scratch-session>
+  (lambda (timeout init-values)
+    (apply make-scratch-session timeout init-values)))
+
+(define-method write-object ((self <scratch-session>) out)
+  (format out "#,(<scratch-session> ~s ~s)"
+          (timeout-of self)
+          (fold (lambda (elem prev)
+                  (if (marshalizable? (cdr elem))
+                    (cons (make-keyword (car elem))
+                          (cons (cdr elem)
+                                prev))
+                    prev))
+                '()
+                (hash-table->alist (values-of self)))))
+
 (define-method valid? ((self <scratch-session>))
   (if (timeout-of self)
-      (> 0 (- (sys-time)
-              (+ (constructed-time-of self) (timeout-of self))))
-      #t))
+    (> 0 (- (sys-time)
+            (+ (constructed-time-of self) (timeout-of self))))
+    #t))
 
 (define-method response-info-list ((self <scratch-session>))
   (hash-table-fold (response-values-of self)
@@ -63,25 +96,29 @@
                      (if (or (keyword? key)
                              (symbol? key)
                              (string? key))
-                         (cons (if (keyword? key)
-                                   key
-                                   (make-keyword key))
+                         (cons (x->keyword key)
                                (cons value prev))
                          prev))
-                   '()))
+                   (list *scratch-id-key* (get-id self))))
 
 (define-method get-value ((self <scratch-session>) key . default)
-  (hash-table-get (values-of self) key
+  (hash-table-get (values-of self) (x->symbol key)
                   (get-optional default #f)))
 
 (define-method set-value! ((self <scratch-session>) key value)
-  (hash-table-put! (values-of self) key value))
+  (hash-table-put! (values-of self) (x->symbol key) value))
 
 (define-method delete-value! ((self <scratch-session>) key)
-  (hash-table-delete! (values-of self) key))
+  (hash-table-delete! (values-of self) (x->symbol key)))
 
 (define-method value-exists? ((self <scratch-session>) key)
-  (hash-table-exists? (values-of self) key))
+  (hash-table-exists? (values-of self) (x->symbol key)))
+
+(define-method get-id ((self <scratch-session>))
+  (get-value self *scratch-id-key* #f))
+
+(define-method set-id! ((self <scratch-session>) id)
+  (set-value! self *scratch-id-key* id))
 
 (define-method get-cycle-value ((self <scratch-session>) key . default)
   (hash-table-get (cycle-values-of self) key
