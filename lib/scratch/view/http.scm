@@ -86,8 +86,7 @@
                                              (default-action)))
                                '()
                                (list (list *scratch-action-key* action)))
-                           ,@(if (and language
-                                      (not (equal? language (default-language))))
+                           ,@(if language
                                (list (list *scratch-language-key* language))
                                '())
                            ,@(slices params 2))))))))
@@ -123,8 +122,7 @@
                           (list (input :type 'hidden
                                        :name *scratch-action-key*
                                        :value action)))
-                      ,@(if (and language
-                                 (not (equal? language (default-language))))
+                      ,@(if language
                           (list (input :type 'hidden
                                        :name *scratch-language-key*
                                        :value language))
