@@ -74,7 +74,7 @@
 (define (scratch-cgi-main uri mount-point . args)
   (let-keywords* args ((error-proc (cut scratch-error-proc <>
                                         (get-keyword :debug args #f)))
-                       (default-langs (reverse '("ja" "en")))
+                       (default-langs '())
                        (output-encoding (cgi-output-character-encoding)))
     (cgi-main
      (lambda (params)
