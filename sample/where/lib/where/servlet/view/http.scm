@@ -10,14 +10,14 @@
 
 (define (move-to where)
   `(a (@ (href ,(href :action where)))
-      ,(symbol->string where)))
+      ,where))
 
 (define (move-links)
   (tree->string
    (sxml:sxml->html
     (map (lambda (where)
            (list "[" (move-to where) "]"))
-         '(left center right)))))
+         '("left" "center" "right")))))
 
 (define (default-view)
   (show))
