@@ -7,7 +7,7 @@
 
 (require "test/util")
 
-(define-macro (assert-each-state prepare-proc lists)
+(define-macro (assert-each-value prepare-proc lists)
   `(assert-each-list-elem
     ,prepare-proc
     :assert-proc (lambda (key expected actual)
@@ -42,16 +42,16 @@
                                        ("not-exist" () :list #t)
                                        ("not-exist" #t :default #t)
                                        )))))
-   ("get-state/set-state! test"
+   ("get-value/set-value! test"
     (parameterize ((session (make-scratch-session)))
-      (assert-each-state (lambda (key value . options)
-                           (if key (set-state! key value))
-                           (list key value (apply get-state key options)))
+      (assert-each-value (lambda (key value . options)
+                           (if key (set-value! key value))
+                           (list key value (apply get-value key options)))
                          `((#f 1 1)
                            (one 1 2)))
-      (assert-each-state (lambda (key value)
-                           (set-state! key value)
-                           (list key value (get-state key)))
+      (assert-each-value (lambda (key value)
+                           (set-value! key value)
+                           (list key value (get-value key)))
                          `((int 1)
                            (int 100)
                            (:string "string")

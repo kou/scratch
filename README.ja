@@ -42,6 +42,8 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
     * セッション管理とユーザ管理もプラグイン化したいな．
   * SMTP経由のクライアントのサポート
   * esm以外の(MVCの)View構築支援ライブラリのサポート
+  * ログ出力
+  * グループ(あるいは役割(role))によるアクセス制御
 
 以下のような機能はさほど興味がありません．
 
@@ -51,6 +53,12 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
   * オンラインパッチ
     * 特定のポートでREPLすればいいだけなので簡単だけど，アク
       セス制御とかすると面倒だから．
+
+== 依存ライブラリ
+
+  * ((<esm|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=esm>))
+  * ((<dsm|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=dsm>))
+  * ((<marshal|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=marshal>))
 
 == 入手方法
 
@@ -64,22 +72,175 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
 
 == 構造
 
+  +------------+          +----------------------------------------------------+
+  |            |   dsm    |                                                    |
+  |            | ------>  |            ----->              ------>             |
+  |            |    id    |              id                session             |
+  |            |  action  |             action             others              |
+  |            |  others  |             others                                 |
+  |クライアント|         scratchサーバ         サーブレット        アクション  |
+  |   CGI等    |   dsm    |                                                    |
+  |            | <------  |            <------             <------             |
+  |            |   header |             header              view-name          |
+  |            |   result |             result                                 |
+  |            |          |                       /\  |                        |
+  |            |          |                result |   | session                |
+  |            |          |                       |   | others                 |
+  |            |          |                       |   \/                       |
+  |            |          |                      ビュー                        |
+  |            |          |                       esm等                        |
+  +------------+          +----------------------------------------------------+
 
-                  dsm
-                ------>               ----->              ------>
-                   id                   id                session
-                 action                action             others
-                 others                others
-  クライアント          scratchサーバ         サーブレット        アクション
-     CGI等        dsm
-                <------               <------             <------
-                  header               header              view-name
-                  result               result
-                                                 /\  |
-                                          result |   | session
-                                                 |   | others
-                                                 |   \/
-                                                 esm等
+=== クライアント
+
+現在，クライアント用ライブラリとしてCGI用のライブラリのみ提
+供しています．このライブラリを使うことによりCGIスクリプトは
+以下のように書くだけでよくなります．
+
+  #!/usr/local/bin/gosh
+
+  (use dsm.client)
+  (use scratch.client.cgi)
+
+  (define (main args)
+    (scratch-cgi-main (connect-server :host "scratchサーバが動いているホスト名"
+                                      :port ポート番号)
+                      "サーブレットのマウントポイント"))
+
+=== scratchサーバ
+
+scratchサーバはホスト名とポート番号で識別されます．よって，
+scratchサーバを作成するときは以下のようになります．
+
+  (make-scratch-server :host "localhost" :port 5969)
+
+ホスト名/ポート番号はともに省略することができ，省略された場
+合は"localhost"/59102を指定したものとみなされます．これは
+<dsm-server>の初期値に依存しています．
+
+scratchサーバには複数のサーブレットをマウントすることができ
+ます．各サーブレットはマウントポイントによって識別されます．
+scratchサーバにサーブレットをマウントするときは以下のように
+します．
+
+  (add-mount-point! scratchサーバ "マウントポイント" サーブレット)
+
+マウントしただけではscratchサーバはクライアントからの接続を
+受け付けません．クライアントからの接続を受け付けるために以下
+のようにしてクライアントからの接続を受け付けるループに入りま
+す．
+
+  (start-scratch-server scratchサーバ)
+
+scratchサーバを起動するスクリプトは以下のようになるでしょう．
+
+  #!/usr/bin/env gosh
+
+  (use dsm.server)
+  (use scratch.server)
+
+  (define (main args)
+    (let ((server (make-scratch-server :port 5963)))
+      (add-mount-point! server "/sample" (make-sample-servlet))
+      (start-scratch-server server)))
+
+=== サーブレット
+
+サーブレットはクライアントからのリクエストから適切なアクショ
+ンを呼び出します．アクションの結果により適切なビューを呼び出
+し，クライアントに返します．
+
+サーブレットにはユーザ管理機能/アクセス制御機能を組み込むこ
+とができます．デフォルトでは組み込まれていません．
+
+サーブレットはそれぞれモジュールを持っています．サーブレット
+のモジュールの下にはアクションやビューが配置されます．サーブ
+レット用のディレクトリ構成は以下のようになります．ここで，サー
+ブレットのモジュール名はsample-servletとします．
+
+  . --+-- sample-servlet.scm
+      |
+      +-- sample-servlet --+-- action.scm
+                           |
+                           +-- view --+-- http.scm
+                                      |
+                                      +-- http --+-- *.esm
+
+sample-servlet.scmはサーブレットを作成するために使います．例
+えば，以下のようになります．
+
+  (define-module sample-servlet
+    (use scratch.servlet)
+    (export make-sample-servlet))
+  (select-module sample-servlet)
+
+  (define (make-number-table-servlet)
+    (make <scratch-servlet>
+      :servlet-module-name 'sample-servlet))
+
+  (provide "sample-servlet")
+
+ユーザ管理機能を組み込むには以下のようにします．
+
+  (define-module sample-servlet
+    (use scratch.servlet)
+    (use scratch.db.file)
+    (use scratch.user.manager.file)
+    (export make-sample-servlet))
+  (select-module sample-servlet)
+
+  (define (make-number-table-servlet)
+    (make <scratch-servlet>
+      :servlet-module-name 'sample-servlet
+      :user-manager (make <user-manager-file>)))
+
+  (provide "sample-servlet")
+
+アクセス制御機能を組み込むには以下のようにします．
+
+  (define-module sample-servlet
+    (use scratch.servlet)
+    (use scratch.db.file)
+    (use scratch.user.manager.file)
+    (export make-sample-servlet))
+  (select-module sample-servlet)
+
+  (define (make-number-table-servlet)
+    (make <scratch-servlet>
+      :servlet-module-name 'sample-servlet
+      :user-manager (make <user-manager-file>
+                      :default-authority 'deny
+                      :authority-map '((#t add-user)))))
+
+  (provide "sample-servlet")
+
+この例では，デフォルトで全てのアクションは拒否し
+(:default-authoriy 'deny)，add-userというアクションだけは全
+てのユーザに許可(:authority-map '((#t add-user)))します．
+
+それでは，以下のような制御にする例を示します．
+
+  * デフォルトで全てのアクションを許可
+  * guestユーザはresetアクションを拒否
+  * 全てのユーザはadminアクションを拒否
+    * ただし，masterユーザには全てのアクションを許可
+
+ここでは，:user-managerの部分だけ示します．
+
+  (make <user-manager-file>
+    :default-authority 'allow
+    :authority-map '((guest reset admin)
+                     (master)
+                     (#t admin)))
+
+sample-servlet.scmは必須ではありませんが，慣習的にサーブレッ
+トを作成するために用いるようになるでしょう．
+
+=== アクション
+
+=== ビュー
+
+=== scratchが管理するデータ
 
 scratchで管理するデータには3種類のスコープがあります．
 
@@ -117,6 +278,3 @@ scratchを用いたWebベースアプリケーション開発は以下のようにな
 提供するライブラリで，sample-app-servletがクライアントの要求
 に対応するアクションを扱うモジュールです．
 
-このアクションを扱うsample-app-servletモジュールは
-
-scratchを用いる場合は

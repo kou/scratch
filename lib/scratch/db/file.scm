@@ -8,6 +8,9 @@
 (define-method make-db ()
   (make-hash-table 'equal?))
 
+(define-method make-db ((null <null>))
+  (make-db))
+
 (define-method make-db ((alist <pair>))
   (alist->hash-table alist 'equal?))
 

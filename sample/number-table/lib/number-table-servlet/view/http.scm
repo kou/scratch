@@ -1,4 +1,4 @@
-(define-module number-table-servlet.http
+(define-module number-table-servlet.view.http
   (use text.html-lite)
   (use text.tree)
   (use gauche.parameter)
@@ -10,10 +10,10 @@
   (use number-table-servlet.clear-list)
   (export)
   )
-(select-module number-table-servlet.http)
+(select-module number-table-servlet.view.http)
 
 (define-macro (reload-files)
-  '(load-esm-files "number-table-servlet/http/*.esm"))
+  '(load-esm-files "number-table-servlet/view/http/*.esm"))
 
 (reload-files)
 
@@ -44,4 +44,4 @@
                        (clear-list-score y))))
         lst)))
 
-(provide "number-table-servlet/http")
+(provide "number-table-servlet/view/http")

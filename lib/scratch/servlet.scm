@@ -7,8 +7,7 @@
   (use scratch.db)
   (use gauche.parameter)
   (use file.util)
-  (export <scratch-servlet> dispatch
-          do-default))
+  (export <scratch-servlet> dispatch))
 (select-module scratch.servlet)
 
 (autoload scratch.user.manager.null <user-manager-null>)
@@ -18,8 +17,8 @@
   ((session-constructor :accessor session-constructor-of
                         :init-keyword :session-constructor
                         :init-form (make-scratch-session))
-   (servlet-module :accessor servlet-module-of
-                   :init-keyword :servlet-module)
+   (servlet-module-name :accessor servlet-module-name-of
+                        :init-keyword :servlet-module-name)
    (session-table :accessor session-table-of
                   :init-form (make-marshal-table))
    (user-manager :accessor user-manager-of
@@ -91,7 +90,7 @@
   (make-result servlet
                type
                (eval-exported-proc
-                (servlet-module-of servlet)
+                (get-action-module servlet)
                 (string->symbol #`"do-,|action|")
                 (string->symbol #`"do-,|*scratch-default-action-name*|"))))
 
@@ -100,17 +99,18 @@
                       view-name
                       *scratch-default-view-name*))
 
+(define (get-action-module servlet)
+  (get-module
+   (string->symbol
+    #`",(servlet-module-name-of servlet).action")))
+
 (define (get-response-module servlet type)
   (get-module
    (string->symbol
-    #`",(module-name (servlet-module-of servlet)).,|type|")))
+    #`",(servlet-module-name-of servlet).view.,|type|")))
 
 (define (make-response servlet result)
   (list (response-info-list (session))
         result))
-
-;; default procedure
-(define (do-default)
-  #f)
 
 (provide "scratch/servlet")

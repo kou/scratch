@@ -111,5 +111,9 @@
 (define-method clear! ((self <scratch-session>))
   (set! (response-values-of self) (make-response-values))
   (set! (cycle-values-of self) (make-cycle-values)))
-  
+
 (provide "scratch/session")
+
+;; for id-of in set-id!
+(with-module scratch.common
+  (use scratch.session))

@@ -75,6 +75,10 @@
                                  (cut with-error-to-port <>
                                       (cut report-error e)))))
                      '())
+                 (html:hr)
+                 (html:p (html-escape-string
+                          (format "Using scratch version is ~a"
+                                  *scratch-version*)))
                  ))))
 
 (provide "scratch/client/cgi")

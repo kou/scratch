@@ -4,7 +4,8 @@
   (use srfi-11)
   (use gauche.parameter)
   (use gauche.sequence)
-  (export *scratch-id-key* *scratch-user-key*
+  (export *scratch-version*
+          *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
           session parameters user-manager servlet-db
           get-param get-action get-user
@@ -21,6 +22,8 @@
           valid-user? user-exists?)
   )
 (select-module scratch.common)
+
+(define *scratch-version* "0.0.1")
 
 (define *scratch-id-key* :__scratch_id__)
 (define *scratch-user-key* :__scratch_user__)
