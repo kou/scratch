@@ -2,7 +2,7 @@
 
 (use srfi-13)
 (use srfi-37)
-(require "test/server-conf")
+(require "test/dsm-server-conf")
 (use dsm.server)
 
 (define (to-daemon)

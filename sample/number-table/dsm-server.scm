@@ -3,9 +3,6 @@
 (use dsm.server)
 (use number-table)
 
-; (define (continue server id)
-  
-
 (define (main args)
   (let* ((server (make-dsm-server :port 5969))
          (marshal-table (with-module dsm.server (marshal-table-of server)))
@@ -35,5 +32,4 @@
         dispatch))
 
     (add-mount-point! server "/start" start-up)
-;    (add-mount-point! server "/continue" continue)
     (start-dsm-server server)))

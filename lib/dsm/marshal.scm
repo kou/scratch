@@ -11,8 +11,7 @@
 (select-module dsm.marshal)
 
 (define mt-random (make <mersenne-twister> :seed (sys-time)))
-(define (random)
-  (mt-random-real (make <mersenne-twister>)))
+(define (random) (mt-random-real mt-random))
 
 (define-class <reference-object> ()
   ((ref :init-keyword :ref :accessor ref-of)
@@ -65,7 +64,7 @@
    (port :init-keyword :port :accessor port-of))
   )
 
-(define-method initialize ((self <marshal-table>) . args)
+(define-method initialize ((self <marshal-table>) args)
   (next-method)
   (slot-set! self 'id (random))
   (slot-set! self 'obj->id (make-hash-table 'eq?))

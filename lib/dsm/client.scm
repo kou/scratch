@@ -13,7 +13,7 @@
    (socket :accessor socket-of)
    ))
 
-(define-method initialize ((self <dsm-client>) . args)
+(define-method initialize ((self <dsm-client>) args)
   (next-method)
   (slot-set! self 'socket
              (make-client-socket 'inet

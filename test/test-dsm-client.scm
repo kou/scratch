@@ -3,9 +3,9 @@
 (use test.unit)
 (use gauche.process)
 (use dsm.client)
-(load "test/server-conf")
+(load "test/dsm-server-conf")
 
-(let* ((server-command "./test/server.scm")
+(let* ((server-command "./test/dsm-server.scm")
        (server-host "localhost")
        (server-port 59102)
        (process #f))

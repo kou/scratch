@@ -5,6 +5,7 @@
   (use dsm.marshal)
   (use dsm.common)
   (export make-dsm-server start-dsm-server stop-dsm-server
+          socket-of
           add-mount-point! get-by-mount-point get-by-id)
   )
 (select-module dsm.server)
@@ -19,7 +20,7 @@
             :init-value '(1 0))
    ))
 
-(define-method initialize ((self <dsm-server>) . args)
+(define-method initialize ((self <dsm-server>) args)
   (next-method)
   (slot-set! self 'mount-table (make-hash-table 'string=?))
   (slot-set! self 'socket (make-server-socket 'inet
