@@ -8,8 +8,9 @@
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
           session parameters
-          get-param get-state set-state!
-          get-id get-action get-user
+          get-param get-action get-user
+          get-state set-state!
+          get-id set-id!
           generate-id&action
           login! logout! login?)
   )
@@ -42,8 +43,20 @@
 (define (set-state! key value)
   (set-value! (session) key value))
 
-(define (get-id)
-  (get-response-value (session) *scratch-id-key*))
+(define-method get-id ()
+  (get-id (session)))
+
+(define-method get-id (session)
+  (get-response-value session *scratch-id-key* #f))
+
+(define-method set-id! ()
+  (set-id! (session)))
+
+(define-method set-id! (session)
+  (set-id! session (id-of session)))
+
+(define-method set-id! (session id)
+  (set-response-value! session *scratch-id-key* id))
 
 (define (get-action)
   (get-param *scratch-action-key*))
@@ -52,28 +65,30 @@
   (get-state *scratch-user-key* #f))
 
 (define (generate-id&action . args)
-  (let loop ((id (get-id))
-             (action *scratch-default-action-name*)
-             (args args))
-    (cond ((null? args) (values id action args))
-          ((memq (car args) '(:new-session :action))
-           => (lambda (keywords)
-                (case (car keywords)
-                  ((:new-session) (loop (if (cadr args)
-                                            *scratch-new-session-id*
-                                            id)
-                                        action
-                                        (cddr args)))
-                  ((:action) (loop id (cadr args) (cddr args))))))
-          (else (let ((ind (find-index (cut memq <> '(:new-session :action))
-                                       args)))
-                  (values id action
-                          (if ind
+  (let ((default-id (get-id)))
+    (let loop ((id default-id)
+               (action *scratch-default-action-name*)
+               (args args))
+      (cond ((null? args) (values id action args))
+            ((memq (car args) '(:new-session :action))
+             => (lambda (keywords)
+                  (case (car keywords)
+                    ((:new-session) (loop (if (cadr args)
+                                              *scratch-new-session-id*
+                                              default-id)
+                                          action
+                                          (cddr args)))
+                    ((:action) (loop id (cadr args) (cddr args))))))
+            (else (let ((ind (find-index (cut memq <> '(:new-session :action))
+                                         args)))
+                    (if ind
+                        (loop id action
                               (let-values (((before after) (split-at args ind)))
                                 `(,@(take after 2)
                                   ,@before
-                                  ,@(cddr after)))
-                              args)))))))
+                                  ,@(cddr after))))
+                        (values id action args))))))))
+
 (define (login! user)
   (set-state! *scratch-user-key* user))
 

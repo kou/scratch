@@ -37,7 +37,6 @@
 (define-method dispatch ((self <scratch-servlet>) id action type . args)
   (let ((sess (get-session self id)))
     (register-session! self sess)
-    (set-response-value! sess *scratch-id-key* (id-of sess))
     (parameterize ((session sess)
                    (parameters args))
       (check-login-do (user-manager-of self)
@@ -54,8 +53,9 @@
       ((session-constructor-of servlet))))
 
 (define (register-session! servlet session)
-  (set! (id-of session)
-        (id-get (session-table-of servlet) session)))
+  (let ((id (id-get (session-table-of servlet) session)))
+    (set! (id-of session) id)
+    (set-id! session id)))
 
 (define (eval-exported-proc module key default)
   (let ((table (module-table module)))
