@@ -1,0 +1,7 @@
+Content-Type: Text/Plain; charset=<%=gauche-character-encoding%>
+Content-Transfer-Encoding: 7bit
+Subject: Re: [<%=(get-id)%>] <%=(get-action)%>
+From: <%=(get-param "to")%>
+To: <%=(get-param "from")%>
+Date: <%=(rfc2822)%>
+X-Mailer: scratch-client-mail

@@ -1,9 +1,11 @@
 (define-module scratch.client.mail
   (extend scratch.client)
+  (use srfi-1)
   (use srfi-8)
   (use srfi-11)
   (use srfi-13)
   (use gauche.charconv)
+  (use gauche.net)
   (use rfc.822)
   (use rfc.base64)
   (use rfc.quoted-printable)
@@ -36,10 +38,10 @@
 (define (id&action str . defaults)
   (let-keywords* defaults ((id 0)
                            (action ""))
-    ;; Why #/\s*(\[\s*(\S+)?\s*\])?[^\d]*(\d+)?/ is not good?
-    (let ((md (rxmatch #/\s*(\[\s*(\S+)?\s*\])?[^\d]*(\d+)?/ str)))
-      (values (if (and md (md 3))
-                  (x->number (md 3))
+    (let ((md (rxmatch #/^\s*(?i:Re:)?\s*(?:\[\s*(\d+)?\s*\])?\s*(\S+)?\s*$/
+                       str)))
+      (values (if (and md (md 1))
+                  (x->number (md 1))
                   id)
               (or (and md (md 2))
                   action)))))
@@ -55,13 +57,20 @@
                      (id&action (rfc822-header-ref headers "subject" ""))))
         (let* ((dispatch (client mount-point))
                (result (apply dispatch id action type
-                              (parse-body (open-input-string mail-body)
-                                          default-param-name)))
+                              (append-params
+                               (parse-body
+                                (open-input-string mail-body)
+                                (make-id&action-params id action)
+                                default-param-name)
+                               headers)))
                (header-info (car result))
                (body (open-input-string (cadr result))))
           (send-mail "localhost" 25 body
-                     (get-keyword :from header-info)
-                     (get-keyword :to header-info)))))))
+                     (get-keyword :from header-info
+                                  (rfc822-header-ref headers "to"))
+                     (get-keyword :to header-info
+                                  (rfc822-header-ref headers "from")))
+          0)))))
 
 (define (add-param name value params)
   (let ((param (assoc name params)))
@@ -71,19 +80,19 @@
           params)
         (cons (list name value) params))))
 
-(define (parse-body body default-param-name)
+(define (parse-body body params default-param-name)
   (define (add-line line in)
     (string-join (cons line (port->string-list in))
                  "\n"))
-  
+
   (let ((line (read-line body)))
-    (cond ((eof-object? line) '())
-          ((rxmatch #/^(\S+):\s*$/ line)
+    (cond ((eof-object? line) params)
+          ((rxmatch #/^(?:>\s*)?(\S+):\s*$/ line)
            => (lambda (md)
                 (do ((next (read-line body) (read-line body))
-                     (acc '() (cons next acc)))
+                     (acc params (cons next acc)))
                     ((or (eof-object? next)
-                         (rxmatch #/^(\S+):/ next))
+                         (rxmatch #/^(?:>\s*)?(\S+):/ next))
                      (let ((name (md 1))
                            (value (string-join (reverse acc) "\n")))
                        (if (eof-object? next)
@@ -92,11 +101,25 @@
                                       (parse-body
                                        (open-input-string
                                         (add-line next body))))))))))
-          ((rxmatch #/^(\S+):\s*(.+)$/ line)
+          ((rxmatch #/^(?:>\s*)?(\S+):\s*(.+)$/ line)
            => (lambda (md)
                 (add-param (md 1) (string-trim-right (md 2))
                            (parse-body body))))
           (else `((,default-param-name ,(add-line line body)))))))
+
+(define (make-id&action-params id action)
+  `((,(x->string *scratch-id-key*) ,id)
+    (,(x->string *scratch-action-key*) ,action)))
+
+(define (append-params p1 p2)
+  (fold-right (lambda (param prev)
+                (let ((name (car param)))
+                  (fold-right (lambda (value params)
+                                (add-param name value params))
+                              prev
+                              (cdr param))))
+              p1
+              p2))
 
 ;; from scmail
 (define (send-mail host port iport mail-from recipients)

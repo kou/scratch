@@ -52,9 +52,10 @@
         ;; (p module-name)
         (require-in-root-thread (module-name->path module-name)
                                 (current-module))
-        (do () ((required-in-root-thread?))
-          (thread-sleep! 0.5))
-        ;; (load (module-name->path module-name))
+        (if (eq? 'none (gauche-thread-type))
+          (load (module-name->path module-name))
+          (do () ((required-in-root-thread?))
+            (thread-sleep! 0.5)))
         (find-module module-name))))
 
 (define-method dispatch ((self <scratch-servlet>) id action type . args)
@@ -88,9 +89,12 @@
   (and (id-exists? table id)
        (let ((session (id-ref table id)))
          (begin0
-             (and session (valid? session) session)
+             (and (valid-session? session) session)
            (when (not (valid? session))
              (id-delete! table id))))))
+
+(define (valid-session? session)
+  (and session (valid? session)))
 
 (define (get-session servlet id)
   (or (and-let* ((id)
