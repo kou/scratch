@@ -130,8 +130,10 @@
                                        :value language))
                           '()))))))
 
-(define (language-select current-lang langs)
-  (tree->string `("<select name=\"" ,*scratch-language-key* "\">\n"
+(define (language-select current-lang langs . key)
+  (tree->string `("<select name=\""
+                  ,(get-optional key *scratch-language-key*)
+                  "\">\n"
                   ,@(map (lambda (lang)
                            `("<option value=\"" ,(h lang) "\""
                              ,(if (equal? current-lang lang)
