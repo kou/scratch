@@ -5,6 +5,9 @@
 (use www.cgi)
 (use dsm.client)
 
+(define *number-table-server* "localhost")
+(define *number-table-port* 5969)
+
 (define _html-escape-string html-escape-string)
 (define (html-escape-string obj)
   (_html-escape-string (x->string obj)))
@@ -53,7 +56,8 @@
 (define (main args)
   (cgi-main
    (lambda (params)
-     (let* ((client (connect-server :host "localhost" :port 5969))
+     (let* ((client (connect-server :host *number-table-server*
+                                    :port *number-table-port*))
             (intep ((client "/start")))
             (id (cgi-get-parameter "id" params :convert string->number))
             (way (cgi-get-parameter "way" params)))
