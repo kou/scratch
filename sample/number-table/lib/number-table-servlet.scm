@@ -22,7 +22,7 @@
                     :authority-map '((#t add-user)))))
 
 (define (make-session)
-  (let ((table (make-number-table 2)))
+  (let ((table (make-number-table 3)))
     (shuffle-table! table)
     (let ((sess (make-scratch-session :table table
                                       :count 0)))
@@ -100,7 +100,10 @@
                     'jump-to-main
                     (begin
                       (set-session-value!
-                       (session) :message "password doesn't match")
+                       (session)
+                       :message (if (user-exists? user)
+                                    "password doesn't match"
+                                    #`"user ,|user| doesn't exist"))
                       'login)))
       'login))
 

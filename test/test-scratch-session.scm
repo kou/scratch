@@ -82,4 +82,8 @@
                   ((:b 2 :a 1) a 1 :b 2)
                   ((:a 1 :b 2) :b 2 a 1)
                   ((:a 1 :b 2 :c 3) a 1 :b 2 "c" 3))))
+  ("valid? test"
+   (assert-true (valid? (make-scratch-session #f)))
+   (assert-false (valid? (make-scratch-session 0)))
+   (assert-true (valid? (make-scratch-session 30))))
   )

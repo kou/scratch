@@ -1,5 +1,6 @@
 (define-module scratch.servlet
   (extend scratch.common)
+  (use srfi-2)
   (use marshal)
   (use scratch.session)
   (use scratch.user.manager)
@@ -60,10 +61,18 @@
           (make-response self type)
         (store (db-of self) (working-directory-of self))))))
 
+(define (get-valid-session table id)
+  (and (id-exists? table id)
+       (let ((session (id-ref table id)))
+         (begin0
+             (and session (valid? session) session)
+           (when (not (valid? session))
+             (id-delete! table id))))))
+      
 (define (get-session servlet id)
-  (if id
-      (or (id-ref (session-table-of servlet) id #f)
-          ((session-constructor-of servlet)))
+  (or (and-let* ((id)
+                 (session (get-valid-session (session-table-of servlet) id)))
+                session)
       ((session-constructor-of servlet))))
 
 (define (register-session! servlet session)

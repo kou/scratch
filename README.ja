@@ -1,0 +1,63 @@
+# -*- rd -*-
+
+= README.ja
+
+== 作者
+
+Kouhei Sutou <kou@cozmixng.org>
+
+== ライセンス
+
+GPL or BSD License
+
+== メーリングリスト
+
+((<COZMIXNG RWiki - 連絡先|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=%CF%A2%CD%ED%C0%E8>))を御覧下さい．
+
+== なにこれ？
+
+Gauche用のWebベースアプリケーションフレームワークです．現在
+はHTTP用モジュールしかありませんが，将来はSMTPやGUIツールキッ
+ト用のモジュールも追加しようと思っています．
+
+以下のような機能があります．
+
+  * セッション管理
+  * ユーザ管理
+  * スコープ別データ管理
+  * アクセス制御
+  * セッションのタイムアウト管理
+  * 取り換え可能なユーザ/セッション管理モジュール
+  * CGIクライアントのサポート
+  * ((<esm|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=esm>))
+    のサポート
+
+以下のような機能もあればいいなと思っています．
+
+  * I18N
+  * プラグイン
+    * セッション管理とユーザ管理もプラグイン化したいな．
+  * SMTP経由のクライアントのサポート
+  * esm以外の(MVCの)View構築支援ライブラリのサポート
+
+以下のような機能はさほど興味がありません．
+
+  * サーブレット毎の起動/終了
+    * プロジェクト毎に一つサーバを立てればいいのでは？
+
+  * オンラインパッチ
+    * 特定のポートでREPLすればいいだけなので簡単だけど，アク
+      セス制御とかすると面倒だから．
+
+== 入手方法
+
+((<URL:http://www.cozmixng.org/~kou/download/scratch.tar.gz>))
+
+  % svn co http://www.cozmixng.org/repos/gauche/scratch/trunk scratch
+
+== インストール
+
+  # gosh install/install.scm
+
+== 使い方
+

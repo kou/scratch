@@ -7,7 +7,7 @@
           delete-response-value! response-value-exists?
           get-session-value set-session-value!
           delete-session-value! session-value-exists?
-          clear!))
+          clear! valid?))
 (select-module scratch.session)
 
 (define (make-response-values)
@@ -24,18 +24,37 @@
                     :init-thunk make-response-values)
    (session-values :accessor session-values-of
                    :init-thunk make-session-values)
+   (timeout :accessor timeout-of
+            :init-keyword :timeout
+            :init-value 3600)
+   (constructed-time :accessor constructed-time-of
+                     :init-thunk sys-time)
    ))
 
 (define (make-scratch-session . init-values)
   (define (keyword->symbol keyword)
     (string->symbol (keyword->string keyword)))
-  (let ((session (make <scratch-session>)))
+  (define (compute-session-args)
+    (if (and (not (null? init-values))
+             (or (eq? #f (car init-values))
+                 (integer? (car init-values))))
+        (begin0
+            (list :timeout (car init-values))
+          (set! init-values (cdr init-values)))
+        '()))
+  (let ((session (apply make <scratch-session> (compute-session-args))))
     (for-each (lambda (elem)
                 (let ((key (car elem))
                       (value (cadr elem)))
                   (set-value! session (keyword->symbol key) value)))
               (slices init-values 2))
     session))
+
+(define-method valid? ((self <scratch-session>))
+  (if (timeout-of self)
+      (> 0 (- (sys-time)
+              (+ (constructed-time-of self) (timeout-of self))))
+      #t))
 
 (define-method response-info-list ((self <scratch-session>))
   (hash-table-fold (response-values-of self)

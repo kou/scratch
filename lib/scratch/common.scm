@@ -13,7 +13,7 @@
           get-id set-id!
           generate-id&action
           login! logout! login?
-          valid-user?)
+          valid-user? user-exists?)
   )
 (select-module scratch.common)
 
@@ -107,5 +107,8 @@
 
 (define-method valid-user? (user password)
   (valid-user? (user-manager) user password))
+
+(define-method user-exists? (user)
+  (user-exists? (user-manager) user))
 
 (provide "scratch/common")
