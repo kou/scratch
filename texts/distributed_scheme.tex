@@ -40,10 +40,11 @@
  ジェクトをリモートオブジェクト，クライアント側のオブジェクトをローカル
  オブジェクトとする．
  
- サーバはURIに関連付けてオブジェクトを公開する．クライアントはURIをキー
- としてリモートオブジェクトを特定する．
+ サーバはクライアントからの接続を処理するフロントオブジェクトをURIに関連
+ 付けてリモートオブジェクトを公開する．クライアントはURIをキーとしてフロ
+ ントオブジェクトを特定する．
 
- クライアント側ではリモートオブジェクトを手続きで表現し，手続きを適用す
+ クライアント側ではフロントオブジェクトを手続きで表現し，手続きを適用す
  ることによってリモートオブジェクトの値を得る．
  
  \section{例}
@@ -53,8 +54,8 @@
 (define front
   (make-server "dscm://localhost:6789"
     (plus (lambda (x y) (+ x y)))
-    (minus (lambda (x y) (- x y)))
-    (lst '(1 2 3))))
+    (map map)))
+(add-entry! front 'lst '(1 2 3))
 (serve front)
  \end{alltt}
  クライアント:
@@ -63,15 +64,17 @@
   (make-server "dscm://localhost:6789"))
 ((remote 'plus) 1 2)
 \textit{3}
-((remote "minus") 3 1)
-\textit{2}
+(let ((x 2))
+  ((remote "map") (lambda (elem) (+ elem x))
+                  '(1 2)))
+\textit{(3 4)}
 (remote 'lst)
 \textit{(1 2 3)}
  \end{alltt}
  
  \section{今後の予定}
  以上のようなものを作り，フレームワークのセッション管理，コネクションプー
- ルに使う．
+ ル，モデルとビュー／コントローラの接続に使う．
 
  \onecolumn
  
