@@ -25,6 +25,20 @@
                   ("ascii" "Text/Plain")
                   ("iso-2022-jp" "Text/Plain;charset=iso-2022-jp")
                   ("iso-2022-jp" "Text/Plain;  charset=iso-2022-jp aaa"))))
+  ("test encoding->language"
+   (assert-each (lambda (expect encoding default)
+                  (assert-equal expect
+                                (encoding->language encoding default)))
+                `(("ja" "iso-2022-jp" "en")
+                  ("ja" "ISO-2022-JP" "en")
+                  ("ja" "EUC-JP" "en")
+                  ("ja" "euc-JP" "en")
+                  ("ja" "eucJP" "en")
+                  ("en" "ascii" "ja")
+                  ("en" "ASCII" "ja")
+                  ("en" "iso-8859-1" "ja")
+                  ("ja" "???" "ja")
+                  ("en" "???" "en"))))
   ("test parse-body"
    (let ((default-param-name "body"))
      (assert-each (lambda (expect body)
@@ -65,23 +79,26 @@
                   (assert-equal expect (add-param name value params)))
                 '(((("a" "b")) "a" "b" ())
                   ((("a" "b" "c")) "a" "b" (("a" "c"))))))
-  ("test port->header-list&body"
-   (assert-each (lambda (expect-header expect-body mail)
-                  (receive (header body)
-                      (port->header-list&body (if (port? mail)
-                                                  mail
-                                                  (open-input-string mail)))
+  ("test port->header-list&body&language"
+   (assert-each (lambda (expect-header expect-body expect-lang mail)
+                  (receive (header body lang)
+                      (port->header-list&body&language
+                       (if (port? mail)
+                         mail
+                         (open-input-string mail)))
                     (assert-equal expect-header header)
-                    (assert-equal expect-body body)))
-                `((() "" "")
-                  ((("subject" "abc")) "" "Subject: abc")
-                  ((("subject" "abc")) "" "Subject: abc  ")
-                  ((("subject" "abc")) "xyz" "Subject: abc\n\nxyz")
-                  ((("subject" "あabc")) "xyz"
+                    (assert-equal expect-body body)
+                    (assert-equal expect-lang lang)))
+                `((() "" "en" "")
+                  ((("subject" "abc")) "" "en" "Subject: abc")
+                  ((("subject" "abc")) "" "en" "Subject: abc  ")
+                  ((("subject" "abc")) "xyz" "en" "Subject: abc\n\nxyz")
+                  ((("subject" "あabc")) "xyz" "en"
                    "Subject: =?iso-2022-jp?Q?=1B=24=42=24=22=1B=28=42?=abc\n\nxyz")
                   ((("subject" "abc")
                     ("content-type" "text/plain; charset=iso-2022-jp"))
                    "あいうabc"
+                   "ja"
                    ,(ces-convert
                      (string-join
                       (list

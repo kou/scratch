@@ -13,27 +13,31 @@
   (export scratch-mail-main))
 (select-module scratch.client.mail)
 
-(define (port->header-list&body in)
-  (let ((headers (map (lambda (field)
-                        (list (car field)
-                              (string-trim-right
-                               (decode-field (cadr field)
-                                             (gauche-character-encoding)))))
-                      (rfc822-header->list in))))
+(define (port->header-list&body&language in)
+  (let* ((headers (map (lambda (field)
+                         (list (car field)
+                               (string-trim-right
+                                (decode-field (cadr field)
+                                              (gauche-character-encoding)))))
+                       (rfc822-header->list in)))
+         (encoding (content-type->encoding
+                    (rfc822-header-ref headers "content-type" ""))))
     (values headers
             (call-with-input-conversion in
-                                        port->string
-                                        :encoding
-                                        (content-type->encoding
-                                         (rfc822-header-ref headers
-                                                            "content-type"
-                                                            ""))))))
+              port->string
+              :encoding encoding)
+            (encoding->language encoding "en"))))
 
 (define (content-type->encoding ctype . default)
   (let ((md (rxmatch #/([^\;]+\;)?\s*charset=(\S+)/ ctype)))
     (string-downcase (if md
                          (md 2)
                          (get-optional default "ascii")))))
+
+(define (encoding->language encoding default)
+  (cond ((#/jp|jis|cp932/i encoding) "ja")
+        ((#/ascii|iso-8859-1/i encoding) "en")
+        (else default)))
 
 (define (id&action str . defaults)
   (let-keywords* defaults ((id 0)
@@ -53,7 +57,8 @@
                     ((string? mail) (open-input-string mail))
                     (else (error #`",mail must be input-port or string"))))
           (type 'smtp))
-      (let*-values (((headers mail-body) (port->header-list&body in))
+      (let*-values (((headers mail-body language)
+                     (port->header-list&body&language in))
                     ((id action)
                      (id&action (rfc822-header-ref headers "subject" ""))))
         (let* ((server (dsm-connect-server uri))
@@ -62,7 +67,8 @@
                               (append-params
                                (parse-body
                                 (open-input-string mail-body)
-                                `(("http-base" ,http-base)
+                                `(("language" ,language)
+                                  ("http-base" ,http-base)
                                   ,@(make-id&action-params id action))
                                 default-param-name)
                                headers)))
