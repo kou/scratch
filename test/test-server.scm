@@ -1,27 +1,24 @@
 #!/usr/bin/env gosh
 
 (use test.unit)
-(use gauche.process)
-(use dsm.client)
-(load "test/server-conf")
+(use dsm.server)
 
-(let ((server-command "./test/server.scm")
-      (server-host "localhost")
-      (server-port 59102)
-      (process #f))
-  (define-test-case "Server test"
+(let ((server #f))
+  (define-test-case "dsm server test"
     (setup
-     (lambda ()
-       (set! process (run-process server-command
-                                  "--host" server-host
-                                  "--port" server-port))))
-    (teardown
-     (lambda ()
-       (process-kill process)))
-    ("marshalizable object test"
-     (let ((server (connect-server :host server-host
-                                   :port server-port)))
-       (for-each (lambda (key&value)
-                   (assert-equal (cdr key&value) (server (car key&value))))
-                 marshalizable-key&value-alist)))
+     (lambda () (set! server (make-dsm-server))))
+    ("mount test"
+     (assert-each assert-equal
+                  '(("integer" . 1)
+                    ("string" . "str")
+                    ("symbol" . 'sym)
+                    ("list" . '())
+                    ("vector" . #()))
+                  :prepare (lambda (item)
+                             (let ((key (car item))
+                                   (value (cdr item)))
+                               (add-mount-point! server key value)
+                               (list value
+                                     (get-by-mount-point server key)))))
+     )
     ))
