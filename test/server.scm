@@ -2,7 +2,13 @@
 
 (use srfi-13)
 (use srfi-37)
+(require "test/server-conf")
 (use dsm.server)
+
+(define (to-daemon)
+  (close-input-port (standard-input-port))
+  (close-output-port (standard-output-port))
+  (close-output-port (standard-error-port)))
 
 (define (main args)
   (define default-host "localhost")
@@ -32,11 +38,17 @@
        (lambda (option name arg . seeds)         ; unrecognized
          (print "Unrecognized option:" name)
          (usage))
-       (lambda (operand host part) ; operand
+       (lambda (operand host port) ; operand
          (values host port))
        default-host
        default-port
        )
-     (let ((server (make-server :host host :port port)))
-       (start-server server)))
+     (let ((server (make-dsm-server :host host :port port)))
+       (for-each (lambda (elem)
+                   (add-mount-point! server (car elem) (cdr elem)))
+                 marshalizable-key&value-alist)
+       (for-each (lambda (elem)
+                   (add-mount-point! server (car elem) (cadr elem)))
+                 procedure-list)
+       (start-dsm-server server)))
    0)

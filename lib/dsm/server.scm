@@ -1,8 +1,10 @@
 (define-module dsm.server
+  (use srfi-13)
   (use gauche.net)
   (use gauche.selector)
   (use dsm.marshal)
-  (export make-dsm-server start-server
+  (use dsm.common)
+  (export make-dsm-server start-dsm-server stop-dsm-server
           add-mount-point! get-by-mount-point)
   )
 (select-module dsm.server)
@@ -17,14 +19,9 @@
 (define-method initialize ((self <dsm-server>) . args)
   (next-method)
   (slot-set! self 'mount-table (make-hash-table 'string=?))
-  (let* ((address (car (make-sockaddrs (host-of self) (port-of self))))
-	 (socket (make-socket (with-module gauche.net
-                                           (address->protocol-family address))
-			      |SOCK_STREAM|)))
-    (socket-setsockopt socket |SOL_SOCKET| |SO_REUSEADDR| 1)
-    (slot-set! self 'socket socket)
-    (socket-bind socket address)
-    (socket-listen (socket-of self) 5)))
+  (slot-set! self 'socket (make-server-socket 'inet (port-of self)
+                                              :reuse-addr? #t))
+  )
 
 (define (make-dsm-server . keywords)
   (apply make <dsm-server> keywords))
@@ -38,7 +35,7 @@
   (hash-table-get (mount-table-of self)
                   (x->string mount-point)))
 
-(define-method start-server ((self <dsm-server>))
+(define-method start-dsm-server ((self <dsm-server>))
   (let ((selector (make <selector>)))
 
     (define (accept-handler sock flag)
@@ -47,22 +44,26 @@
         (selector-add! selector
                        (socket-input-port client :buffered? #f)
                        (lambda (input flag)
-                         (echo client input output))
+                         (handle-dsmp client input output))
                        '(r))))
-
-    (define (echo client input output)
-      (let ((str (read-block 4096 input)))
-        (if (eof-object? str)
+    
+    (define (handle-dsmp client input output)
+      (let ((header (read-line input)))
+        (if (eof-object? header)
             (begin (selector-delete! selector input #f #f)
                    (socket-close client))
-            (begin (display (marshal (get-by-mount-point self str))
-                            output)
-                   (flush output)))))
+            (dsmp-response header
+                           input
+                           output
+                           (cut get-by-mount-point self <>)))))
     
     (selector-add! selector
                    (socket-fd (socket-of self))
                    accept-handler
                    '(r))
     (do () (#f) (selector-select selector))))
+
+(define-method stop-dsm-server ((self <dsm-server>))
+  (socket-close (socket-of self)))
 
 (provide "dsm/server")

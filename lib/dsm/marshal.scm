@@ -2,7 +2,7 @@
   (use srfi-1)
   (use srfi-10)
   (use gauche.collection)
-  (export marshalizable? marshal unmarshal)
+  (export marshalizable? marshal unmarshal referenced-object?)
   )
 (select-module dsm.marshal)
 
@@ -10,6 +10,9 @@
   ((id :init-keyword :id :accessor id-of))
   )
 
+(define (referenced-object? obj)
+  (is-a? obj <reference-object>))
+         
 (define-reader-ctor '<reference-object>
   (lambda (id)
     (make <reference-object> :id id)))
@@ -83,10 +86,9 @@
            out)
     (get-output-string out)))
 
-(define-method unmarshal (str)
-  (let ((obj (read-from-string str)))
-    (if (is-a? obj <reference-object>)
-        (id-ref (id-of obj))
-        obj)))
+(define-method unmarshal (obj)
+  (if (is-a? obj <reference-object>)
+      (id-ref (id-of obj))
+      obj))
                                      
 (provide "dsm/marshal")
