@@ -1,6 +1,7 @@
 (define-module number-table-servlet.action
   (use srfi-2)
   (use scratch.action)
+  (use scratch.user.manager)
   (use number-table)
   (use number-table-servlet.clear-list)
   (export update-value! do-move do-deny do-main))

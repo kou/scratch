@@ -6,10 +6,10 @@
 (define-class <scratch-db-null> ()
   ())
 
-(define-method store ((self <scratch-db-null>) base-dir)
+(define-method store ((self <scratch-db-null>))
   #f)
 
-(define-method restore ((self <scratch-db-null>) base-dir)
+(define-method restore ((self <scratch-db-null>))
   #f)
 
 (define-method get-value ((self <scratch-db-null>) key . default)

@@ -7,6 +7,7 @@
   (use text.html-lite)
   (use esm.gauche)
   (export load-esm-files define-scratch-esm
+          input
           h href form alist->attributes
           user-name-input password-input
           default-view)

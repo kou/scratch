@@ -13,10 +13,7 @@
 (autoload rfc.sha1 <sha1>)
 
 (define-class <user-manager> ()
-  ((working-directory :accessor working-directory-of
-                      :init-keyword :working-directory
-                      :init-value "./user")
-   (digest-type :accessor digest-type-of
+  ((digest-type :accessor digest-type-of
                 :init-keyword :digest-type
                 :init-form <md5>)
    (default-authority :accessor default-authority-of
@@ -28,7 +25,6 @@
 
 (define-method initialize ((self <user-manager>) args)
   (next-method)
-  (make-directory* (working-directory-of self))
   (restore self))
 
 (define-method check-login-do ((self <user-manager>)

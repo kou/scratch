@@ -6,6 +6,7 @@
   (use scratch.user.manager)
   (use scratch.db)
   (use gauche.parameter)
+  (use gauche.collection)
   (use file.util)
   (export <scratch-servlet> dispatch))
 (select-module scratch.servlet)
@@ -16,25 +17,26 @@
 (define-class <scratch-servlet> ()
   ((session-constructor :accessor session-constructor-of
                         :init-keyword :session-constructor
-                        :init-form (make-scratch-session))
+                        :init-form make-scratch-session)
    (servlet-module-name :accessor servlet-module-name-of
                         :init-keyword :servlet-module-name)
    (session-table :accessor session-table-of
                   :init-form (make-marshal-table))
+   (session-store-filename :accessor session-store-filename-of
+                           :init-form
+                           (build-path *scratch-default-working-directory*
+                                       "session-db.scm"))
    (user-manager :accessor user-manager-of
                  :init-keyword :user-manager
                  :init-form (make <user-manager-null>))
-   (working-directory :accessor working-directory-of
-                      :init-keyword :working-directory
-                      :init-value ".")
    (db :accessor db-of :init-keyword :db
        :init-form (make <scratch-db-null>))
    ))
 
 (define-method initialize ((self <scratch-servlet>) args)
   (next-method)
-  (make-directory* (working-directory-of self))
-  (restore (db-of self) (working-directory-of self)))
+  (make-directory* (sys-dirname (session-store-filename-of self)))
+  (restore (db-of self)))
 
 (define (get-module module-name)
   (or (find-module module-name)
@@ -58,7 +60,7 @@
                             (get-param *scratch-password-key* #f)
                             action
                             (cut do-action self type <>)))
-        (store (db-of self) (working-directory-of self))))))
+        (store self)))))
 
 (define (get-valid-session table id)
   (and (id-exists? table id)
@@ -67,7 +69,7 @@
              (and session (valid? session) session)
            (when (not (valid? session))
              (id-delete! table id))))))
-      
+
 (define (get-session servlet id)
   (or (and-let* ((id)
                  (session (get-valid-session (session-table-of servlet) id)))
@@ -78,6 +80,27 @@
   (let ((id (id-get (session-table-of servlet) session)))
     (set! (id-of session) id)
     (set-id! session id)))
+
+(define-method store ((self <scratch-servlet>))
+  (store (db-of self))
+  (call-with-output-file (session-store-filename-of self)
+    (cut store-session self <>)))
+
+(define-method restore ((self <scratch-servlet>))
+  (restore (db-of self))
+  (if (file-exists? (session-store-filename-of self))
+      (call-with-input-file (session-store-filename-of self)
+        (cut restore-session servlet <>))))
+
+(define (store-session servlet out)
+  (let ((table (session-table-of servlet)))
+    (write (filter marshalizable?
+                   (marshal-table->alist table))
+           out)))
+
+(define (restore-session servlet in)
+  (set! (session-table-of servlet)
+        (alist->marshal-table (read in))))
 
 (define (eval-exported-proc module key default)
   (let ((table (module-table module)))

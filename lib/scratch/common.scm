@@ -33,6 +33,8 @@
 (define *scratch-deny-action-name* 'deny)
 (define *scratch-new-session-id* 0)
 
+(define *scratch-default-working-directory* ".state")
+
 (define session (make-parameter #f))
 (define parameters (make-parameter '()))
 (define user-manager (make-parameter #f))

@@ -7,10 +7,10 @@
 (define-class <scratch-db> ()
   ())
 
-(define-method store ((self <scratch-db>) base-dir)
+(define-method store ((self <scratch-db>))
   (error "not implemented"))
 
-(define-method restore ((self <scratch-db>) base-dir)
+(define-method restore ((self <scratch-db>))
   (error "not implemented"))
 
 (define-method get-value ((self <scratch-db>) key . default)

@@ -1,5 +1,6 @@
 (define-module scratch.user.manager.file
   (extend scratch.user.manager)
+  (use file.util)
   (use scratch.db)
   (use scratch.db.file)
   (export <user-manager-file>))
@@ -9,16 +10,17 @@
   ((user-db :accessor user-db-of)))
 
 (define-method initialize ((self <user-manager-file>) args)
-  (let-keywords* args ((filename ".passwd"))
+  (let-keywords* args ((filename (build-path *scratch-default-working-directory*
+                                             "passwd.scm")))
     (set! (user-db-of self)
           (make <scratch-db-file> :filename filename)))
   (next-method))
 
 (define-method store ((self <user-manager-file>))
-  (store (user-db-of self) (working-directory-of self)))
+  (store (user-db-of self)))
 
 (define-method restore ((self <user-manager-file>))
-  (restore (user-db-of self) (working-directory-of self)))
+  (restore (user-db-of self)))
 
 (define-method add-user! ((self <user-manager-file>) user password . keywords)
   (define (add)
