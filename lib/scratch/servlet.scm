@@ -39,6 +39,8 @@
            :init-value '("scratch"))
    (gettext-dirs :accessor gettext-dirs-of :init-keyword :gettext-dirs
                  :init-value #f)
+   (default-languages :accessor default-languages-of
+                      :init-keyword :default-languages :init-value '())
    ))
 
 (define-method initialize ((self <scratch-servlet>) args)
@@ -63,25 +65,26 @@
                    (parameters args)
                    (user-manager (user-manager-of self))
                    (servlet-db (db-of self)))
-      (parameterize ((app-gettext (if (app-gettext)
-                                    (begin
-                                      (if (get-param "language" #f)
-                                        ((app-gettext) 'set-locale!
-                                         (get-param "language")))
-                                      (app-gettext))
-                                    (make-gettext (domain-of self)
-                                                  (get-param "language" #f)
-                                                  (gettext-dirs-of self)))))
-        (clear! (session))
-        (begin0
-            (make-response self
-                           (check-login-do (user-manager)
-                              (or (get-param *scratch-user-key* #f)
-                                  (get-user))
-                              (get-param *scratch-password-key* #f)
-                              action
-                              (cut do-action self type <>)))
-          (store self))))))
+      (let ((langs (get-param "language" (default-languages-of self)
+                              :list #t)))
+        (parameterize ((languages langs)
+                       (app-gettext (if (app-gettext)
+                                      (begin
+                                        ((app-gettext) 'set-locale! langs)
+                                        (app-gettext))
+                                      (make-gettext (domain-of self)
+                                                    langs
+                                                    (gettext-dirs-of self)))))
+          (clear! (session))
+          (begin0
+              (make-response self
+                             (check-login-do (user-manager)
+                                (or (get-param *scratch-user-key* #f)
+                                    (get-user))
+                                (get-param *scratch-password-key* #f)
+                                action
+                                (cut do-action self type <>)))
+            (store self)))))))
 
 (define (get-valid-session table id)
   (and (id-exists? table id)

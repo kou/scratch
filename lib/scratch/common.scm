@@ -10,7 +10,10 @@
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
           *scratch-action-not-specify*
+          
           session parameters user-manager servlet-db app-gettext
+          languages
+          
           get-param get-action get-user
           get-servlet-value set-servlet-value!
           delete-servlet-value! servlet-value-exists?
@@ -21,8 +24,10 @@
           delete-response-value! response-value-exists?
           get-id set-id!
           generate-id&action
+          
           login! logout! login?
           valid-user? user-exists?
+          
           _ n_)
   )
 (select-module scratch.common)
@@ -45,6 +50,7 @@
 (define user-manager (make-parameter #f))
 (define servlet-db (make-parameter #f))
 (define app-gettext (make-parameter #f))
+(define languages (make-parameter #f))
 
 (define (get-param keyword . options)
   (apply cgi-get-parameter (x->string keyword) (parameters)
