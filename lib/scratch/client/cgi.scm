@@ -43,19 +43,25 @@
               (type 'http)
               (result (apply dispatch id action type (add-meta-info params)))
               (header-info (car result))
-              (body (cadr result))
+              (body (tree->string (cadr result)))
               (cookies (construct-cookie-string
                         `((,(x->string *scratch-id-key*)
                            ,(x->string
-                             (get-keyword *scratch-id-key* header-info id)))))))
+                             (get-keyword *scratch-id-key* header-info id))))))
+              (content-type
+               (get-keyword :content-type header-info
+                            (format "text/html; charset=~a"
+                                    (or (ces-guess-from-string body "*JP")
+                                        (gauche-character-encoding))))))
          `(,(cond ((get-keyword :location header-info #f)
                    => (cut cgi-header
                            :cookies cookies
                            :location <>))
                   (else
                    `(,(cgi-header :cookies cookies
+                                  :Content-Type content-type
                                   :Content-Length
-                                  (string-length (tree->string body)))
+                                  (string-size body))
                      ,body))))))
      :merge-cookies #t
      :on-error error-proc)))

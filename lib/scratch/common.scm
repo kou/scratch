@@ -42,10 +42,10 @@
 
 (define (get-param keyword . options)
   (apply cgi-get-parameter (x->string keyword) (parameters)
-         `(,@(if (or (null? options)
-                     (not (null? (cdr options))))
-                 options
-                 (list :default (car options)))
+         `(,@(if (and (not (null? options))
+                      (not (keyword? (car options))))
+                 (cons :default options)
+                 options)
            :list #f)))
 
 (define-method get-servlet-value (key . fall-back)
