@@ -1,6 +1,7 @@
 (define-module number-table-servlet
   (use scratch.servlet)
   (use scratch.session)
+  (use scratch.user.manager.file)
   (use number-table)
   (use www.cgi)
   (export make-number-table-servlet
@@ -9,8 +10,10 @@
 
 (define (make-number-table-servlet)
   (make <scratch-servlet>
-    :module (find-module 'number-table-servlet)
-    :session-constructor make-session))
+    :servlet-module (find-module 'number-table-servlet)
+    :session-constructor make-session
+    :user-manager (make <user-manager-file>
+                    :default-authority 'deny)))
 
 (define (make-session)
   (let ((table (make-number-table 3)))
@@ -37,12 +40,13 @@
     (set-value! session 'available-ways (get-available-ways table))
     ))
 
-(define (do-move session params)
-  (let ((table (table-of session))
-        (count (count-of session))
-        (way (get-param "way" params :convert string->symbol)))
-    (set-value! session 'count (+ 1 (count-of session)))
+(define (do-move)
+  (let* ((sess (session))
+         (table (table-of sess))
+         (count (count-of sess))
+         (way (get-param "way" :convert string->symbol)))
+    (set-value! sess 'count (+ 1 (count-of sess)))
     (move! table way)
-    (update-session session)))
+    (update-session sess)))
 
 (provide "number-table-servlet")

@@ -6,7 +6,7 @@
   (use gauche.parameter)
   (use esm.gauche)
   (use srfi-1)
-  (export default)
+  (export)
   )
 (select-module number-table-servlet.http)
 
@@ -15,8 +15,8 @@
 
 (reload-files)
 
-(define (default . args)
-  (apply main args))
+(define (default-view)
+  (main))
 
 (define (available-ways)
   (map (lambda (way available)

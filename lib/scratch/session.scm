@@ -2,7 +2,6 @@
   (use util.list)
   (export make-scratch-session
           id-of response-key-of response-info
-          id-set!
           get-value set-value! key-exists?
           get-response-value set-response-value! response-key-exists?
           ))
@@ -15,12 +14,6 @@
                   :init-form (make-hash-table 'eq?))
    (values :accessor values-of :init-form (make-hash-table 'eq?))
    ))
-
-; (define-method id-set! ((self <scratch-session>) value)
-;   (set! (id-of self) value))
-
-(define (id-set! session value)
-  (slot-set! session 'id value))
 
 (define (make-scratch-session . init-values)
   (define (keyword->symbol keyword)
@@ -64,4 +57,4 @@
 (define-method response-key-exists? ((self <scratch-session>) key)
   (hash-table-exists? (response-info-of self) key))
 
-(provide "scratch/servlet")
+(provide "scratch/session")

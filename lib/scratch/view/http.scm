@@ -1,65 +1,53 @@
 (define-module scratch.view.http
+  (extend scratch.common)
+  (use srfi-11)
   (use file.util)
-  (use www.cgi)
   (use util.list)
-  (use esm.gauche)
-  (use gauche.parameter)
-  (use scratch.common)
-  (use scratch.session)
+  (use text.tree)
   (use text.html-lite)
+  (use esm.gauche)
   (export load-esm-files define-scratch-esm
-          session parameters
-          get-param get-state
-          h href
-          parameterize-if-need)
+          h href form alist->attributes
+          default-view)
   )
 (select-module scratch.view.http)
 
 (define (h string)
   (with-string-io (x->string string) html-escape))
 
-(define session (make-parameter #f))
-(define parameters (make-parameter '()))
-
-(define _scratch-get-param get-param)
-(define (get-param keyword . fall-back)
-  (apply _scratch-get-param keyword (parameters) fall-back))
-
-(define (get-state keyword . fall-back)
-  (apply get-value (session) keyword fall-back))
-(define (get-id)
-  (get-response-value (session) *scratch-id-key*))
+(define (alist->attributes alist)
+  (map (lambda (elem)
+         #`",(car elem)=,(h (cadr elem))")
+       alist))
 
 (define (href . params)
-  (let* ((id (if (eq? :new-session (get-optional params #f))
-                 (begin
-                   (set! params (cdr params))
-                   0)
-                 (get-id)))
-         (action (if (eq? :action (get-optional params #f))
-                     (begin0
-                         (cadr params)
-                       (set! params (cddr params)))
-                     'default)))
+  (let-values (((id action params) (apply generate-id&action params)))
     (h (string-append (get-param "script-name" "")
                       "?"
-                      (string-join (map (lambda (elem)
-                                          #`",(car elem)=,(cadr elem)")
-                                        `(,(list *scratch-id-key* id)
-                                          ,(list *scratch-action-key* action)
-                                          ,@(slices params 2)))
+                      (string-join (alist->attributes
+                                    `(,(list *scratch-id-key* id)
+                                      ,(list *scratch-action-key* action)
+                                      ,@(slices params 2)))
                                    ";")))))
+
+(define (form . attrs)
+  (string-append `("<form action=\""
+                   ,(get-param "script-name" "")
+                   "\" "
+                   ,(string-join (map (lambda (attr)
+                                        #`",(car attr)=\",(h (cadr attr))\"")
+                                      (slices keywords 2))
+                                 " ")
+                   ">")))
 
 (define-macro (define-scratch-esm name filename)
   (let ((args (gensym))
         (src `(esm-result* ,(call-with-input-file filename port->string))))
     `(define (,name . ,args)
-       (let-keywords* ,args ((sess :session (session))
-                             (params #f))
+       (let-keywords* ,args ((params #f))
          (parameterize ((parameters (if params
                                         `(,@params ,@(parameters))
-                                        (parameters)))
-                        (session sess))
+                                        (parameters))))
            ,src)))))
 
 (define-macro (load-esm-files pattern)

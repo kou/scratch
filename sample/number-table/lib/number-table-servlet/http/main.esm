@@ -1,7 +1,7 @@
 <%= (header) %>
 <h1>Number Table</h1>
 <p>
-	<a href="<%= (href :new-session) %>">NEW GAME</a>
+	<a href="<%= (href :new-session #t) %>">NEW GAME</a>
 	/
 	<%= (get-state 'count) %>
 </p>

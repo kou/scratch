@@ -21,14 +21,13 @@
   (is-a? obj <reference-object>))
          
 (define-reader-ctor '<reference-object>
-  (lambda (ref table-id)
-    (make <reference-object> :ref ref :table-id table-id)))
+  (lambda args
+    (apply make <reference-object> args)))
 
 (define-method write-object ((self <reference-object>) out)
-  (format out "#,(<reference-object> ~s ~s)"
+  (format out "#,(<reference-object> :ref ~s :table-id ~s)"
           (ref-of self)
-          (table-id-of self)
-          ))
+          (table-id-of self)))
 
 (define-method object-hash ((self <reference-object>))
   (logior (hash (ref-of self))
