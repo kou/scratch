@@ -8,10 +8,9 @@
 (define *login-count-mount-point* "/login-count")
 
 (define (main args)
-  (let* ((server (make-scratch-server
-                  #`"dsmp://:,|*login-count-port*|")))
-    (add-mount-point! server
-                      *login-count-mount-point*
-                      (make-login-count-servlet))
+  (let ((servlet (make-login-count-servlet))
+        (server (make-scratch-server
+                 #`"dsmp://:,|*login-count-port*|")))
+    (add-mount-point! server *login-count-mount-point* servlet)
     (scratch-server-start! server)
     (scratch-server-join! server)))

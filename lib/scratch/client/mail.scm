@@ -47,7 +47,8 @@
                   action)))))
 
 (define (scratch-mail-main uri mount-point mail . args)
-  (let-keywords* args ((default-param-name "body"))
+  (let-keywords* args ((default-param-name "body")
+                       (http-base #f))
     (let ((in (cond ((input-port? mail) mail)
                     ((string? mail) (open-input-string mail))
                     (else (error #`",mail must be input-port or string"))))
@@ -61,7 +62,8 @@
                               (append-params
                                (parse-body
                                 (open-input-string mail-body)
-                                (make-id&action-params id action)
+                                `((http-base ,http-base)
+                                  ,@(make-id&action-params id action))
                                 default-param-name)
                                headers)))
                (header-info (car result))

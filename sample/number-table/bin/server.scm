@@ -8,9 +8,8 @@
 (define *number-table-mount-point* "/number-table")
 
 (define (main args)
-  (let* ((server (make-scratch-server #`"dsmp://:,|*number-table-port*|")))
-    (add-mount-point! server
-                      *number-table-mount-point*
-                      (make-number-table-servlet))
+  (let ((servlet (make-number-table-servlet))
+        (server (make-scratch-server #`"dsmp://:,|*number-table-port*|")))
+    (add-mount-point! server *number-table-mount-point* servlet)
     (scratch-server-start! server)
     (scratch-server-join! server)))

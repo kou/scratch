@@ -141,8 +141,9 @@ scratchサーバを起動するスクリプトは以下のようになるでしょう．
   (use scratch.server)
 
   (define (main args)
-    (let ((server (make-scratch-server "dsmp://:5963")))
-      (add-mount-point! server "/sample" (make-sample-servlet))
+    (let* ((servlet (make-sample-servlet))
+           (server (make-scratch-server "dsmp://:5963")))
+      (add-mount-point! server "/sample" servlet)
       (start-scratch-server server)))
 
 === サーブレット

@@ -8,9 +8,8 @@
 (define *where-mount-point* "/where")
 
 (define (main args)
-  (let* ((server (make-scratch-server #`"dsmp://:,|*where-port*|")))
-    (add-mount-point! server
-                      *where-mount-point*
-                      (make-where-servlet))
+  (let ((servlet (make-where-servlet))
+        (server (make-scratch-server #`"dsmp://:,|*where-port*|")))
+    (add-mount-point! server *where-mount-point* servlet)
     (scratch-server-start! server)
     (scratch-server-join! server)))
