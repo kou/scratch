@@ -117,7 +117,8 @@
                     (make-cgi-header :cookies cookies
                                      :status status
                                      :content-type content-type
-                                     :Content-Length (string-size body))
+                                     ;; :Content-Length (string-size body)
+                                     )
                     body))))))
      :merge-cookies #t
      :on-error error-proc)))
