@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd"
+[
+ <!ATTLIST svg
+  xmlns:xlink CDATA #FIXED "http://www.w3.org/1999/xlink">
+]>
+<!-- Created with Sodipodi ("http://www.sodipodi.com/") -->
+<svg
+   id="svg548"
+   sodipodi:version="0.32"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="210mm"
+   height="297mm"
+   sodipodi:docbase="/home/kou/work/scheme/scratch"
+   sodipodi:docname="/home/kou/work/scheme/scratch/componets.svg">
+  <defs
+     id="defs550" />
+  <sodipodi:namedview
+     id="base" />
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;text-anchor:start;writing-mode:lr;"
+     x="213.661850"
+     y="415.816986"
+     id="text551">
+    <tspan
+       x="213.661850"
+       y="415.816986"
+       sodipodi:role="line"
+       id="tspan554">
+input</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="286.250000"
+     y="428.612183"
+     id="text556">
+    <tspan
+       id="tspan557">
+context</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan559"
+       x="286.250000"
+       y="448.612183">
+maker</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="412.500000"
+     y="451.112183"
+     id="text561">
+    <tspan
+       id="tspan562">
+process</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan564"
+       x="412.500000"
+       y="471.112183">
+maneger</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="468.750000"
+     y="518.612183"
+     id="text566">
+    <tspan
+       id="tspan567">
+processor</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="418.589325"
+     y="587.604919"
+     id="text569">
+    <tspan
+       id="tspan570">
+output</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan572"
+       x="418.589325"
+       y="607.604919">
+maneger</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="278.546570"
+     y="601.455261"
+     id="text576">
+    <tspan
+       id="tspan577">
+output</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan579"
+       x="278.546570"
+       y="621.455261">
+maker</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="203.138943"
+     y="592.221542"
+     id="text581">
+    <tspan
+       id="tspan582">
+output</tspan>
+  </text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 240.073 429.095 L 275.469 429.095 "
+     id="path585"
+     transform="matrix(2.173894,0.000000,0.000000,1.000000,-323.3713,-3.051758e-5)" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 358.571 438.329 L 403.2 455.257 "
+     id="path586" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 470.913 479.88 C 497.075 499.886 497.075 499.886 497.075 499.886 "
+     id="path587" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 497.075 532.203 L 470.913 564.521 "
+     id="path588" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 409.356 601.455 L 346.26 602.994 "
+     id="path589" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 269.313 604.533 C 244.69 604.533 244.69 604.533 244.69 604.533 "
+     id="path590"
+     transform="matrix(3.124990,0.000000,0.000000,1.000000,-572.2875,-3.051758e-5)" />
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="364.726753"
+     y="430.633850"
+     id="text594">
+    <tspan
+       id="tspan595">
+context</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="498.613770"
+     y="484.496521"
+     id="text597">
+    <tspan
+       id="tspan598">
+context</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="504.769508"
+     y="556.826202"
+     id="text600">
+    <tspan
+       id="tspan601">
+context</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="287.780182"
+     y="345.992706"
+     id="text603">
+    <tspan
+       id="tspan604">
+handle</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan606"
+       x="287.780182"
+       y="365.992706">
+http,</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan608"
+       x="287.780182"
+       y="385.992706">
+smtp,</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan610"
+       x="287.780182"
+       y="405.992706">
+etc</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="478.607697"
+     y="307.519287"
+     id="text621">
+    <tspan
+       id="tspan622">
+restore session data</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan635"
+       x="478.607697"
+       y="327.519287">
+from</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan626"
+       x="478.607697"
+       y="347.519287">
+on memory,</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan624"
+       x="478.607697"
+       y="367.519287">
+file store</tspan>
+  </text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 523.237 386.005 L 478.608 435.251 "
+     id="path628" />
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="346.259567"
+     y="638.389618"
+     id="text632">
+    <tspan
+       id="tspan633">
+context</tspan>
+  </text>
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="490.919136"
+     y="666.090271"
+     id="text637">
+    <tspan
+       id="tspan638">
+store session data</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan640"
+       x="490.919128"
+       y="686.090271">
+by</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan642"
+       x="490.919128"
+       y="706.090271">
+on memory,</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan644"
+       x="490.919128"
+       y="726.090271">
+file store</tspan>
+  </text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 486.302 646.084 C 486.302 646.084 486.302 646.084 486.302 646.084 "
+     id="path647" />
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 469.374 683.019 L 457.063 612.228 "
+     id="path651" />
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="609.416786"
+     y="502.963654"
+     id="text652">
+    <tspan
+       id="tspan653">
+process</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan655"
+       x="609.416809"
+       y="522.963654">
+using </tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan657"
+       x="609.416809"
+       y="542.963654">
+your library</tspan>
+  </text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 563.249 510.658 L 615.573 512.197 "
+     id="path662"
+     transform="matrix(0.764708,0.000000,0.000000,1.000000,132.5282,-3.051758e-5)" />
+  <text
+     style="fill:black;stroke:none;font-family:Arial;font-style:normal;font-weight:normal;font-size:20;text-anchor:start;writing-mode:lr;fill-opacity:1;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;"
+     x="293.935883"
+     y="673.785034"
+     id="text666">
+    <tspan
+       id="tspan667">
+select</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan669"
+       x="293.935883"
+       y="693.785034">
+output</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan671"
+       x="293.935883"
+       y="713.785034">
+using</tspan>
+    <tspan
+       sodipodi:role="line"
+       id="tspan673"
+       x="293.935883"
+       y="733.785034">
+output info db</tspan>
+  </text>
+  <path
+     style="fill:none;fill-rule:evenodd;stroke:black;stroke-opacity:1;stroke-width:1pt;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;"
+     d="M 309.325 629.156 L 309.325 653.779 "
+     id="path675" />
+</svg>
