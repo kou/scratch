@@ -1,7 +1,7 @@
 #!/usr/bin/env gosh
 
 (use test.unit)
-(use scratch.marshal)
+(use dsm.marshal)
 
 (define-test-case "Marshal test"
   ("can marshalizable? test"

@@ -2,7 +2,7 @@
 
 (use srfi-13)
 (use srfi-37)
-(use scratch.server)
+(use dsm.server)
 
 (define (main args)
   (define default-host "localhost")
@@ -37,5 +37,6 @@
        default-host
        default-port
        )
-     (start-server! (make-server :host host :port port))
+     (let ((server (make-server :host host :port port)))
+       (start-server server)))
    0)

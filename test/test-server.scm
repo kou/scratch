@@ -2,7 +2,7 @@
 
 (use test.unit)
 (use gauche.process)
-(use scratch.server)
+(use dsm.client)
 (load "test/server-conf")
 
 (let ((server-command "./test/server.scm")

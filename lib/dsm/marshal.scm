@@ -1,10 +1,10 @@
-(define-module scratch.marshal
+(define-module dsm.marshal
   (use srfi-1)
   (use srfi-10)
   (use gauche.collection)
   (export marshalizable? marshal unmarshal)
   )
-(select-module scratch.marshal)
+(select-module dsm.marshal)
 
 (define-class <reference-object> ()
   ((id :init-keyword :id :accessor id-of))
@@ -89,4 +89,4 @@
         (id-ref (id-of obj))
         obj)))
                                      
-(provide "scratch/marshal")
+(provide "dsm/marshal")
