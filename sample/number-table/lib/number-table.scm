@@ -107,7 +107,7 @@
 
 (define (shuffle-table! table)
   (let ((max-num (row-number-of table)))
-    (dotimes (i (* max-num max-num (random-integer max-num)))
+    (dotimes (i (* max-num max-num (+ 1 (random-integer max-num))))
       (swap-cell! table
                   (random-integer max-num)
                   (random-integer max-num)
