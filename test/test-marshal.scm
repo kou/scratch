@@ -8,7 +8,7 @@
       (port 59100))
   (define-test-case "Marshal test"
     (setup
-     (lambda () (set! table (make-marshal-table host port))))
+     (lambda () (set! table (make-marshal-table))))
     ("can marshalizable? test"
      (for-each (lambda (obj)
                  (assert-true (marshalizable? obj)))
@@ -38,8 +38,6 @@
                      (with-module dsm.marshal
                        (make <reference-object>
                          :ref 1
-                         :id (id-of table)
-                         :host "example.com"
-                         :port 5963))
+                         :table-id (id-of table)))
                      (list 1 (lambda (x) x) '(1)))))
     ))

@@ -15,37 +15,28 @@
 
 (define-class <reference-object> ()
   ((ref :init-keyword :ref :accessor ref-of)
-   (id :init-keyword :id :accessor id-of)
-   (host :init-keyword :host :accessor host-of)
-   (port :init-keyword :port :accessor port-of))
-  )
+   (table-id :init-keyword :table-id :accessor table-id-of)))
 
 (define (reference-object? obj)
   (is-a? obj <reference-object>))
          
 (define-reader-ctor '<reference-object>
-  (lambda (ref id host port)
-    (make <reference-object> :ref ref :id id :host host :port port)))
+  (lambda (ref table-id)
+    (make <reference-object> :ref ref :table-id table-id)))
 
 (define-method write-object ((self <reference-object>) out)
-  (format out "#,(<reference-object> ~s ~s ~s ~s)"
+  (format out "#,(<reference-object> ~s ~s)"
           (ref-of self)
-          (id-of self)
-          (host-of self)
-          (port-of self)
+          (table-id-of self)
           ))
 
 (define-method object-hash ((self <reference-object>))
   (logior (hash (ref-of self))
-          (hash (id-of self))
-          (hash (host-of self))
-          (hash (port-of self))))
+          (hash (table-id-of self))))
 
 (define (equal-reference-object? ref1 ref2)
   (and (= (ref-of ref1) (ref-of ref2))
-       (= (id-of ref1) (id-of ref2))
-       (string=? (host-of ref1) (host-of ref2))
-       (= (port-of ref1) (port-of ref2))))
+       (= (table-id-of ref1) (table-id-of ref2))))
 
 (define-method object-equal? ((self <reference-object>) other)
   (and (is-a? other <reference-object>)
@@ -59,9 +50,7 @@
   ((id :accessor id-of)
    (obj->id :accessor obj->id-of)
    (id->obj :accessor id->obj-of)
-   (counter :accessor counter-of)
-   (host :init-keyword :host :accessor host-of)
-   (port :init-keyword :port :accessor port-of))
+   (counter :accessor counter-of))
   )
 
 (define-method initialize ((self <marshal-table>) args)
@@ -71,8 +60,8 @@
   (slot-set! self 'id->obj (make-hash-table 'eqv?))
   (slot-set! self 'counter 0))
 
-(define (make-marshal-table host port)
-  (make <marshal-table> :host host :port port))
+(define (make-marshal-table)
+  (make <marshal-table>))
 
 (define-method update-counter! ((table <marshal-table>))
   (inc! (counter-of table)))
@@ -126,15 +115,12 @@
 
 (define (using-same-table? table object)
   (and (reference-object? object)
-       (string=? (host-of table) (host-of object))
-       (= (port-of table) (port-of object))))
+       (= (id-of table) (table-id-of object))))
 
 (define (make-reference-object-from-marshal-table table obj)
   (make <reference-object>
     :ref (id-get table obj)
-    :id (id-of table)
-    :host (host-of table)
-    :port (port-of table)))
+    :table-id (id-of table)))
 
 (define (marshal table object)
   (define (make-marshalized-object obj)

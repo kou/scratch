@@ -20,8 +20,7 @@
     (add-mount-point! dsm-server *scratch-restore-mount-point*
                       (cut restore self <>))
     (slot-set! self 'dsm-server dsm-server))
-  (slot-set! self 'store-table (make-marshal-table-using-socket
-                                (socket-of (dsm-server-of self))))
+  (slot-set! self 'store-table (make-marshal-table))
   )
 
 (define (make-scratch-server . keywords)

@@ -17,8 +17,8 @@
             ((show) table)
             ((move)
              (inc! count)
-             (move! (make-keyword (x->string (car args)))
-                    table))
+             (move! table
+                    (make-keyword (x->string (car args)))))
             ((clear?) (clear? table))
             ((available-ways) (call-with-values
                                   (lambda () (available-ways table))

@@ -76,7 +76,7 @@
                 (< (+ 1 y) (row-number-of table))) ; south
         (values #f #f #f #f))))
 
-(define (move! way table)
+(define (move! table way)
   (receive (x y)
       (empty-cell-index table)
     (case way

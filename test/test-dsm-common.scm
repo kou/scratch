@@ -37,7 +37,7 @@
       (port 59110))
   (define-test-case "dsm common library test"
     (setup
-     (lambda () (set! table (make-marshal-table host port))))
+     (lambda () (set! table (make-marshal-table))))
     ("make-header test"
      (assert-each assert-equal
                   `(("v=1;e=UTF-8;l=1;c=get" . 1)

@@ -25,7 +25,7 @@
          (socket (socket-of client))
          (in (socket-input-port socket))
          (out (socket-output-port socket))
-         (table (make-marshal-table-using-socket socket)))
+         (table (make-marshal-table)))
     (lambda (mount-point)
       (dsmp-request (marshal table mount-point) table
                     in out

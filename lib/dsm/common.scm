@@ -5,8 +5,7 @@
   (use gauche.charconv)
   (use dsm.marshal)
   (export dsmp-request dsmp-response
-          version-of encoding-of length-of id-of
-          make-marshal-table-using-socket)
+          version-of encoding-of length-of id-of)
   )
 (select-module dsm.common)
 
@@ -24,16 +23,6 @@
    (encoding :init-keyword :encoding :accessor encoding-of)
    (length :init-keyword :length :accessor length-of)
    (command :init-keyword :command :accessor command-of)))
-
-(define (get-sock-host&port socket)
-  (let* ((md (rxmatch #/(.*):(\d+)$/
-                      (sockaddr-name (socket-address socket)))))
-    (list (md 1)
-          (string->number (md 2)))))
-
-(define (make-marshal-table-using-socket socket)
-  (apply make-marshal-table
-         (get-sock-host&port socket)))
 
 (define (make-dsmp-header alist)
   (define (set-dsmp-header-slot! header key value)
