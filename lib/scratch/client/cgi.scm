@@ -71,52 +71,56 @@
                                         (get-keyword :debug args #f)))
                        (default-langs (reverse '("ja" "en")))
                        (output-encoding (cgi-output-character-encoding)))
-    (parameterize ((cgi-output-character-encoding output-encoding))
-      (cgi-main
-       (lambda (params)
-         (let* ((server (dsm-connect-server uri))
-                (params (map (lambda (elem)
-                               (map (lambda (x)
-                                      (ces-convert (x->string x) "*JP"))
-                                    elem))
-                             params))
-                (dispatch (server mount-point))
-                (id (cgi-get-parameter (x->string *scratch-id-key*)
-                                       params
-                                       :convert string->number))
-                (action (cgi-get-parameter (x->string *scratch-action-key*)
-                                           params
-                                           :convert string->symbol
-                                           :default ""))
-                (type 'http)
-                (result (apply dispatch id action type
-                               (add-meta-info params default-langs)))
-                (header-info (car result))
-                (body (tree->string (cadr result)))
-                (cookies (construct-cookie-string
-                          `((,(x->string *scratch-id-key*)
-                             ,(x->string
-                               (get-keyword *scratch-id-key* header-info id))))))
-                (status (get-keyword :status header-info "OK"))
-                (content-type
-                 (get-keyword :content-type header-info
-                              (format "text/html; charset=~a"
-                                      (normalize-charset
-                                       (cgi-output-character-encoding))))))
-           `(,(cond ((get-keyword :location header-info #f)
-                     => (cut make-cgi-header
-                             :cookies cookies
-                             :status "MOVED"
-                             :Location <>))
-                    (else
-                     (list
-                      (make-cgi-header :cookies cookies
-                                       :status status
-                                       :content-type content-type
-                                       :Content-Length (string-size body))
-                      body))))))
-       :merge-cookies #t
-       :on-error error-proc))))
+    (cgi-main
+     (lambda (params)
+       (let* ((server (dsm-connect-server uri))
+              (params (map (lambda (elem)
+                             (map (lambda (x)
+                                    (ces-convert (x->string x) "*JP"))
+                                  elem))
+                           params))
+              (dispatch (server mount-point))
+              (id (cgi-get-parameter (x->string *scratch-id-key*)
+                                     params
+                                     :convert string->number))
+              (action (cgi-get-parameter (x->string *scratch-action-key*)
+                                         params
+                                         :convert string->symbol
+                                         :default ""))
+              (type 'http)
+              (result (apply dispatch id action type
+                             (add-meta-info params default-langs)))
+              (header-info (car result))
+              (body (tree->string (cadr result)))
+              (cookies (construct-cookie-string
+                        `((,(x->string *scratch-id-key*)
+                           ,(x->string
+                             (get-keyword *scratch-id-key* header-info id))))))
+              (status (get-keyword :status header-info "OK"))
+              (content-type
+               (get-keyword :content-type header-info
+                            (format "text/html; charset=~a"
+                                    (normalize-charset output-encoding))))
+              (output-encoding
+               (rxmatch-if (rxmatch #/\S+\;\s*charset=(\S+)/i content-type)
+                   (charset)
+                 charset
+                 output-encoding))))
+       (parameterize ((cgi-output-character-encoding output-encoding))
+         `(,(cond ((get-keyword :location header-info #f)
+                   => (cut make-cgi-header
+                           :cookies cookies
+                           :status "MOVED"
+                           :Location <>))
+                  (else
+                   (list
+                    (make-cgi-header :cookies cookies
+                                     :status status
+                                     :content-type content-type
+                                     :Content-Length (string-size body))
+                    body))))))
+     :merge-cookies #t
+     :on-error error-proc)))
 
 (define http-status-alist
   '(("OK" "200 OK")
