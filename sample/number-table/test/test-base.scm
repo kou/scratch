@@ -133,5 +133,10 @@
                  (move :south
                        '((1 #f)
                          (3 2)))))
+  ("clear? test"
+   (assert-true (clear? '((1 2)
+                          (3 #f))))
+   (assert-false (clear? '((1 #f)
+                           (3 2)))))
    )
 

@@ -5,7 +5,7 @@
    make-numbers sort-numbers flatten
    sort-number-table available-ways empty-cell-index
    make-number-table row-number-of column-number-of
-   move swap-cell! get-cell set-cell!)
+   move swap-cell! get-cell set-cell! clear? shuffle-table)
   )
 (select-module number-table)
 
@@ -97,5 +97,17 @@
 (define (set-cell! table x y value)
   (set! (ref (ref table y) x) value)
   table)
+
+(define (clear? table)
+  (equal? (sort-numbers (flatten (make-number-table (row-number-of table))))
+          (flatten table)))
+
+(define (shuffle-table table)
+  (let ((max-num (row-number-of table)))
+    (swap-cell! table
+                (remainder (sys-random) max-num)
+                (remainder (sys-random) max-num)
+                (remainder (sys-random) max-num)
+                (remainder (sys-random) max-num))))
 
 (provide "number/table")
