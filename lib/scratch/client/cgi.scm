@@ -49,12 +49,11 @@
           ("HTTP_HOST" "host-name")
           ((("HTTP_ACCEPT_LANGUAGE"
              ,(lambda (value)
-                (let ((langs (cgi-get-parameter "language" params
-                                                :default #f :list #t)))
-                  (if (null? langs)
-                    (parse-accept-language value default-langs)
-                    langs)))))
-           "language")
+                (append (cgi-get-parameter (x->string *scratch-language-key*)
+                                           params
+                                           :default '() :list #t)
+                        (parse-accept-language value default-langs)))))
+           ,(x->string *scratch-language-key*))
           ((("HTTP_IF_MODIFIED_SINCE"
              ,(lambda (value)
                 (and value
@@ -70,7 +69,7 @@
                  '())))
     (if (null? langs)
       (get-optional default #f)
-      (reverse langs))))
+      langs)))
 
 (define (scratch-cgi-main uri mount-point . args)
   (let-keywords* args ((error-proc (cut scratch-error-proc <>

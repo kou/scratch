@@ -69,7 +69,8 @@
                               (append-params
                                (parse-body
                                 (open-input-string mail-body)
-                                `(("language" ,language)
+                                `((,(x->string *scratch-language-key*)
+                                   ,language)
                                   ("http-base" ,http-base)
                                   ,@(make-id&action-params id action))
                                 default-param-name)

@@ -9,10 +9,11 @@
   (use text.tree)
   (use text.html-lite)
   (export use-cookie-only default-action
-          input
+          form input
           h hd u ue
-          href full-href form alist->attributes
-          user-name-input password-input))
+          href full-href alist->attributes
+          user-name-input password-input
+          language-select))
 (select-module scratch.view.http)
 
 (define use-cookie-only (make-parameter #t))
@@ -70,7 +71,8 @@
 
 (define (href . params)
   (let ((new-session? (get-keyword :new-session params #f)))
-    (let-values (((id action params) (apply generate-id&action params)))
+    (let-values (((id action language params)
+                  (apply generate-id&action&language params)))
       (h (string-append (get-param "script-name" "")
                         "?"
                         (alist->params-string
@@ -84,6 +86,10 @@
                                              (default-action)))
                                '()
                                (list (list *scratch-action-key* action)))
+                           ,@(if (and language
+                                      (not (equal? language (default-language))))
+                               (list (list *scratch-language-key* language))
+                               '())
                            ,@(slices params 2))))))))
 
 (define (full-href . params)
@@ -97,7 +103,8 @@
 
 (define (form . attrs)
   (let ((new-session? (get-keyword :new-session attrs #f)))
-    (let-values (((id action attrs) (apply generate-id&action attrs)))
+    (let-values (((id action language attrs)
+                  (apply generate-id&action&language attrs)))
       (tree->string `("<form action=\""
                       ,(get-param "script-name" "")
                       "\" "
@@ -115,7 +122,27 @@
                           '()
                           (list (input :type 'hidden
                                        :name *scratch-action-key*
-                                       :value action))))))))
+                                       :value action)))
+                      ,@(if (and language
+                                 (not (equal? language (default-language))))
+                          (list (input :type 'hidden
+                                       :name *scratch-language-key*
+                                       :value language))
+                          '()))))))
+
+(define (language-select current-lang langs)
+  (tree->string `("<select name=\"" ,*scratch-language-key* "\">\n"
+                  ,@(map (lambda (lang)
+                           `("<option value=\"" ,(h lang) "\""
+                             ,(if (equal? current-lang lang)
+                                " selected=\"selected\""
+                                "")
+                             ">"
+                             ,(h (_ lang))
+                             "(" ,(h lang) ")"
+                             "</option>\n"))
+                         langs)
+                  "</select>\n")))
 
 (define (user-name-input . attrs)
   (apply input

@@ -65,16 +65,15 @@
                    (parameters args)
                    (user-manager (user-manager-of self))
                    (servlet-db (db-of self)))
-      (let ((langs (get-param "language" (default-languages-of self)
+      (let ((langs (get-param *scratch-language-key*
+                              (default-languages-of self)
                               :list #t)))
         (parameterize ((languages langs)
-                       (app-gettext (if (app-gettext)
-                                      (begin
-                                        ((app-gettext) 'set-locale! langs)
-                                        (app-gettext))
-                                      (make-gettext (domain-of self)
-                                                    langs
-                                                    (gettext-dirs-of self)))))
+                       (app-gettext (make-gettext (domain-of self)
+                                                  ;; I don't know why
+                                                  ;; I need reverse!!!
+                                                  (reverse langs)
+                                                  (gettext-dirs-of self))))
           (clear! (session))
           (begin0
               (make-response self

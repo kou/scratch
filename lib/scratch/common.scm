@@ -9,10 +9,10 @@
   (use gauche.sequence)
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
-          *scratch-action-not-specify*
+          *scratch-action-not-specify* *scratch-language-key*
           
           session parameters user-manager servlet-db app-gettext
-          languages
+          languages default-language
           
           get-param get-action get-user
           get-servlet-value set-servlet-value!
@@ -23,7 +23,8 @@
           get-response-value set-response-value!
           delete-response-value! response-value-exists?
           get-id set-id!
-          generate-id&action
+
+          generate-id&action&language
           
           login! logout! login?
           valid-user? user-exists?
@@ -36,6 +37,7 @@
 (define *scratch-user-key* :__scratch_user__)
 (define *scratch-password-key* :__scratch_password__)
 (define *scratch-action-key* :__scratch_action__)
+(define *scratch-language-key* :__scratch_language__)
 
 (define *scratch-default-action-name* 'default)
 (define *scratch-default-view-name* 'default-view)
@@ -51,6 +53,7 @@
 (define servlet-db (make-parameter #f))
 (define app-gettext (make-parameter #f))
 (define languages (make-parameter #f))
+(define default-language (make-parameter #f))
 
 (define (get-param keyword . options)
   (apply cgi-get-parameter (x->string keyword) (parameters)
@@ -107,31 +110,37 @@
 (define (get-user)
   (get-value *scratch-user-key* #f))
 
-(define (generate-id&action . args)
+(define (generate-id&action&language . args)
   (let ((default-id (get-id)))
     (let loop ((id default-id)
                (action (or (get-action)
                            *scratch-default-action-name*))
+               (language (if (null? (languages))
+                           #f
+                           (car (languages))))
                (args args))
-      (cond ((null? args) (values id action args))
-            ((memq (car args) '(:new-session :action))
+      (cond ((null? args) (values id action language args))
+            ((memq (car args) '(:new-session :action :language))
              => (lambda (keywords)
                   (case (car keywords)
                     ((:new-session) (loop (if (cadr args)
                                               *scratch-new-session-id*
                                               default-id)
                                           action
+                                          language
                                           (cddr args)))
-                    ((:action) (loop id (cadr args) (cddr args))))))
-            (else (let ((ind (find-index (cut memq <> '(:new-session :action))
+                    ((:action) (loop id (cadr args) language (cddr args)))
+                    ((:language) (loop id action (cadr args) (cddr args))))))
+            (else (let ((ind (find-index (cut memq <>
+                                              '(:new-session :action :language))
                                          args)))
                     (if ind
-                        (loop id action
+                        (loop id action language
                               (let-values (((before after) (split-at args ind)))
                                 `(,@(take after 2)
                                   ,@before
                                   ,@(cddr after))))
-                        (values id action args))))))))
+                        (values id action language args))))))))
 
 (define (login! user)
   (set-value! *scratch-user-key* user))
