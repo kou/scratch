@@ -1,12 +1,14 @@
 (define-module dsm.common
   (use text.tree)
   (use srfi-13)
+  (use gauche.net)
   (use gauche.charconv)
   (use dsm.marshal)
   (export x->dsm-header->string
           dsmp-write dsmp-request dsmp-response
           parse-dsm-header
           get-dsm-object-from-remote
+          get-sock-host&port
           version-of encoding-of length-of)
   )
 (select-module dsm.common)
@@ -38,8 +40,8 @@
               alist)
     dsm-header))
 
-(define (x->dsm-header obj . keywords)
-  (apply make-dsm-header-from-string (marshal obj) keywords))
+(define (x->dsm-header table obj . keywords)
+  (apply make-dsm-header-from-string (marshal table obj) keywords))
 
 (define (make-dsm-header-from-string str . keywords)
   (make-dsm-header`(("v" . ,dsm-version)
@@ -56,8 +58,8 @@
                 dsm-delimiter)
    "\n"))
 
-(define (x->dsm-header->string obj . keywords)
-  (dsm-header->string (apply x->dsm-header obj keywords)))
+(define (x->dsm-header->string table obj . keywords)
+  (dsm-header->string (apply x->dsm-header table obj keywords)))
 
 (define (parse-dsm-header header)
   (make-dsm-header (map (lambda (elem)
@@ -100,21 +102,21 @@
 (define (eval-in-remote obj arg in out)
   (get-dsm-object-from-remote (cons obj arg) in out "eval"))
 
-(define (handle-dsmp-body command body make-body-proc)
+(define (handle-dsmp-body command table body make-body-proc)
   (cond ((string=? "eval" command)
-         (p body)
-         (ct)
-         (apply (unmarshal (car body))
+         (apply (unmarshal table (car body))
                 (cdr body)))
         (else (make-body-proc body))))
 
-(define (dsmp-response header input output make-body-proc)
+(define (dsmp-response header table input output make-body-proc)
   (let* ((dsm-header (parse-dsm-header header))
          (body (get-dsm-body (length-of dsm-header) input))
          )
     (let (
          (marshalized-body (marshal
+                            table
                             (handle-dsmp-body (command-of dsm-header)
+                                              table
                                               body
                                               make-body-proc))))
     (dsmp-write (dsm-header->string
@@ -123,4 +125,11 @@
                 output)))
   )
 
+(define (get-sock-host&port sock)
+  (let* ((names (string-split
+                 (sockaddr-name (socket-address sock))
+                 #\:)))
+    (list (car names)
+          (string->number (cadr names)))))
+    
 (provide "dsm/common")

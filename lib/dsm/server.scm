@@ -14,13 +14,18 @@
    (port :init-keyword :port :accessor port-of :init-value 59102)
    (mount-table :accessor mount-table-of)
    (socket :accessor socket-of)
+   (marshal-table :accessor marshal-table-of)
    ))
 
 (define-method initialize ((self <dsm-server>) . args)
   (next-method)
   (slot-set! self 'mount-table (make-hash-table 'string=?))
-  (slot-set! self 'socket (make-server-socket 'inet (port-of self)
+  (slot-set! self 'socket (make-server-socket 'inet
+                                              (port-of self)
                                               :reuse-addr? #t))
+  (slot-set! self 'marshal-table
+             (apply make-marshal-table
+                    (get-sock-host&port (socket-of self))))
   )
 
 (define (make-dsm-server . keywords)
@@ -53,6 +58,7 @@
             (begin (selector-delete! selector input #f #f)
                    (socket-close client))
             (dsmp-response header
+                           (marshal-table-of self)
                            input
                            output
                            (cut get-by-mount-point self <>)))))

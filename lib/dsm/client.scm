@@ -34,17 +34,20 @@
             (eval-in-remote remote-obj arg in out))
           remote-obj))))
 
-(define (get-from-remote obj in out . options)
-  (apply get-dsm-object-from-remote (marshal obj) in out options))
+(define (get-from-remote obj table in out . options)
+  (apply get-dsm-object-from-remote (marshal table obj) in out options))
 
-(define (get-by-mount-point client-socket mount-point)
+(define (get-by-mount-point mount-point client-socket table)
   (let ((in (socket-input-port client-socket))
         (out (socket-output-port client-socket)))
-    #?=(get-from-remote mount-point in out)))
+    (get-from-remote mount-point table in out)))
 
 (define (connect-server . keywords)
   (let ((remote (apply make <dsm-client> keywords)))
     (lambda (mount-point)
-      (get-by-mount-point (socket-of remote) mount-point))))
+      (get-by-mount-point mount-point
+                          (socket-of remote)
+                          (apply make-marshal-table
+                                 (get-sock-host&port (socket-of remote)))))))
 
 (provide "dsm/client")

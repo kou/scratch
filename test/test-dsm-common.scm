@@ -23,41 +23,47 @@
     (assert-equal header-command command
                   (make-message-handler header-command "command"))
     ))
-    
-(define-test-case "dsm common library test"
-  ("make-header test"
-   (assert-each assert-equal
-                `(("v=1;e=UTF-8;l=1;c=get\n" . 1)
-                  ("v=1;e=UTF-8;l=5;c=get\n" . "abc")
-                  ("v=1;e=UTF-8;l=2;c=get\n" . ())
-                  ("v=1;e=UTF-8;l=5;c=get\n" . (1 2))
-                  )
-                :prepare (lambda (item)
-                           (list (car item)
-                                 (x->dsm-header->string (cdr item)))))
-   )
-  ("parse-header test"
-   (assert-each assert-dsm-header
-                `(("v=1;e=UTF-8;l=1;c=get\n" 1 "UTF-8" 1 "get")
-                  ("version=1;encoding=UTF-8;length=1;command=eval\n"
-                   1 "UTF-8" 1 "eval")
-                  ("v=1.1;e=EUC-JP;l=3;c=get\n" 1.1 "EUC-JP" 3 "get")
-                  ))
-   )
-  ("dsmp-response test"
-   (assert-each assert-equal
-                `(1 "abc" ,(lambda (x) x))
-                :prepare
-                (lambda (item)
-                  (list (string-append (x->dsm-header->string item)
-                                       (marshal item))
-                        (let ((in (open-input-string (marshal item)))
-                              (out (open-output-string)))
-                          (dsmp-response
-                           (x->dsm-header->string (marshal item))
-                           in
-                           out
-                           (lambda (body) (unmarshal body)))
-                          (get-output-string out)))))
-   )
-  )
+
+(let ((table #f)
+      (host "localhost")
+      (port 59110))
+  (define-test-case "dsm common library test"
+    (setup
+     (lambda () (set! table (make-marshal-table host port))))
+    ("make-header test"
+     (assert-each assert-equal
+                  `(("v=1;e=UTF-8;l=1;c=get\n" . 1)
+                    ("v=1;e=UTF-8;l=5;c=get\n" . "abc")
+                    ("v=1;e=UTF-8;l=2;c=get\n" . ())
+                    ("v=1;e=UTF-8;l=5;c=get\n" . (1 2))
+                    )
+                  :prepare (lambda (item)
+                             (list (car item)
+                                   (x->dsm-header->string table (cdr item)))))
+     )
+    ("parse-header test"
+     (assert-each assert-dsm-header
+                  `(("v=1;e=UTF-8;l=1;c=get\n" 1 "UTF-8" 1 "get")
+                    ("version=1;encoding=UTF-8;length=1;command=eval\n"
+                     1 "UTF-8" 1 "eval")
+                    ("v=1.1;e=EUC-JP;l=3;c=get\n" 1.1 "EUC-JP" 3 "get")
+                    ))
+     )
+    ("dsmp-response test"
+     (assert-each assert-equal
+                  `(1 "abc" ,(lambda (x) x))
+                  :prepare
+                  (lambda (item)
+                    (list (string-append (x->dsm-header->string table item)
+                                         (marshal table item))
+                          (let ((in (open-input-string (marshal table item)))
+                                (out (open-output-string)))
+                            (dsmp-response
+                             (x->dsm-header->string table item)
+                             table
+                             in
+                             out
+                             (lambda (body) (unmarshal table body)))
+                            (get-output-string out)))))
+     )
+    ))
