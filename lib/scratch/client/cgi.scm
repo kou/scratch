@@ -18,7 +18,10 @@
                  (value (with-module www.cgi
                           (if (pair? search-key)
                             (do ((keys search-key (cdr keys))
-                                 (result #f (get-meta (car keys))))
+                                 (result #f
+                                         (if (pair? (car keys))
+                                           ((cadar keys) (get-meta (caar keys)))
+                                           (get-meta (car keys)))))
                                 ((or (null? keys)
                                      result)
                                  result)
@@ -30,7 +33,11 @@
                       prev)
                 prev)))
         params
-        '((("REQUEST_URI" "SCRIPT_NAME") "script-name")
+        `(((("REQUEST_URI" ,(lambda (value)
+                              (and value
+                                   (#/\?/ value)
+                                   ((#/\?/ value) 'before))))
+            "SCRIPT_NAME") "script-name")
           ("HTTP_HOST" "host-name"))))
 
 (define (scratch-cgi-main client mount-point . args)
