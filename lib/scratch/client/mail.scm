@@ -99,13 +99,15 @@
                            (list (list name value))
                            (add-param name value
                                       (parse-body
-                                       (open-input-string
-                                        (add-line next body))))))))))
+                                       (open-input-string (add-line next body))
+                                       acc
+                                       default-param-name))))))))
           ((rxmatch #/^(?:>\s*)?(\S+):\s*(.+)$/ line)
            => (lambda (md)
                 (add-param (md 1) (string-trim-right (md 2))
-                           (parse-body body))))
-          (else `((,default-param-name ,(add-line line body)))))))
+                           (parse-body body params default-param-name))))
+          (else (add-param default-param-name (add-line line body)
+                           params)))))
 
 (define (make-id&action-params id action)
   `((,(x->string *scratch-id-key*) ,id)

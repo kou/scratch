@@ -1,5 +1,5 @@
 (define-module scratch.view.http
-  (extend scratch.common)
+  (extend scratch.view.common)
   (use srfi-11)
   (use rfc.uri)
   (use gauche.regexp)
@@ -8,14 +8,11 @@
   (use util.list)
   (use text.tree)
   (use text.html-lite)
-  (use esm.gauche)
   (export use-cookie-only default-action
-          load-esm-files define-scratch-esm
           input
           h hd u ue
           href full-href form alist->attributes
-          user-name-input password-input
-          default-view)
+          user-name-input password-input)
   )
 (select-module scratch.view.http)
 
@@ -134,31 +131,5 @@
          :type 'password
          :name *scratch-password-key*
          attrs))
-
-(define-macro (define-scratch-esm name filename)
-  (let ((args (gensym))
-        (src `(esm-result* ,(call-with-input-file filename port->string))))
-    `(define (,name . ,args)
-       (let-keywords* ,args ((params '()))
-         (parameterize ((parameters `(,@params ,@(parameters))))
-           ,src)))))
-
-(define-macro (load-esm-files pattern)
-  `(begin
-     ,@(map (lambda (esm-filename)
-              (rxmatch-let (rxmatch #/([^\/]+)\.[^.]+$/ esm-filename)
-                  (orig name)
-                (let ((proc-name (string->symbol name)))
-                  `(begin
-                     (export ,proc-name)
-                     (define-scratch-esm ,proc-name ,esm-filename)))))
-            (call/cc
-             (lambda (break)
-               (for-each (lambda (path)
-                           (let ((files (sys-glob (build-path path pattern))))
-                             (if (not (null? files))
-                                 (break files))))
-                         *load-path*)
-               '())))))
 
 (provide "scratch/view/http")
