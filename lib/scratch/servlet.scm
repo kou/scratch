@@ -93,7 +93,9 @@
              #f)))))
 
 (define (valid-session? session)
-  (and session (valid? session)))
+  (and session
+       (scratch-session? session)
+       (valid? session)))
 
 (define (get-session servlet id)
   (or (and-let* ((id)
@@ -126,8 +128,11 @@
            out)))
 
 (define (restore-session servlet in)
-  (set! (session-table-of servlet)
-        (alist->marshal-table (read in))))
+  (let ((data (read in)))
+    (set! (session-table-of servlet)
+          (alist->marshal-table (if (eof-object? data)
+                                  '()
+                                  data)))))
 
 (define (eval-exported-proc module key default)
   (let ((table (module-table module)))

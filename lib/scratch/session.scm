@@ -13,7 +13,7 @@
           delete-response-value! response-value-exists?
           get-cycle-value set-cycle-value!
           delete-cycle-value! cycle-value-exists?
-          clear! valid?))
+          clear! valid? scratch-session?))
 (select-module scratch.session)
 
 (define (make-response-values)
@@ -149,6 +149,9 @@
 (define-method clear! ((self <scratch-session>))
   (set! (response-values-of self) (make-response-values))
   (set! (cycle-values-of self) (make-cycle-values)))
+
+(define (scratch-session? session)
+  (is-a? session <scratch-session>))
 
 (provide "scratch/session")
 
