@@ -106,6 +106,8 @@
                (get-keyword :content-type header-info
                             (format "text/html; charset=~a"
                                     (normalize-charset output-encoding))))
+              (content-disposition
+               (get-keyword :content-disposition header-info #f))
               (output-encoding
                (rxmatch-if (rxmatch #/\S+\;\s*charset=(\S+)/i content-type)
                    (_ charset)
@@ -119,11 +121,15 @@
                            :Location <>))
                   (else
                    (list
-                    (make-cgi-header :cookies cookies
-                                     :status status
-                                     :content-type content-type
-                                     ;; :Content-Length (string-size body)
-                                     )
+                    (apply make-cgi-header
+                           :cookies cookies
+                           :status status
+                           :content-type content-type
+                           ;; :Content-Length (string-size body)
+                           `(,@(if content-disposition
+                                 `(:Content-Disposition ,content-disposition)
+                                 '()))
+                           )
                     body))))))
      :merge-cookies #t
      :on-error error-proc)))
