@@ -4,6 +4,7 @@
   (use gauche.charconv)
   (use gauche.regexp)
   (use srfi-1)
+  (use srfi-13)
   (use rfc.cookie)
   (use text.tree)
   (use text.html-lite)
@@ -11,7 +12,7 @@
   )
 (select-module scratch.client.cgi)
 
-(define (add-meta-info params)
+(define (add-meta-info params default-langs)
   (fold (lambda (key-info prev)
           (let* ((search-key (car key-info))
                  (regist-key (cadr key-info))
@@ -35,14 +36,30 @@
         params
         `(((("REQUEST_URI" ,(lambda (value)
                               (and value
-                                   (#/\?/ value)
-                                   ((#/\?/ value) 'before))))
+                                   (if (#/\?/ value)
+                                     ((#/\?/ value) 'before)
+                                     value))))
             "SCRIPT_NAME") "script-name")
-          ("HTTP_HOST" "host-name"))))
+          ("HTTP_HOST" "host-name")
+          ((("HTTP_ACCEPT_LANGUAGE"
+             ,(cut parse-accept-language <> default-langs)))
+           "language"))))
+
+(define (parse-accept-language value . default)
+  (let ((langs (if (string? value)
+                 (map (lambda (lang)
+                        (string-trim-both
+                         (car (string-split lang #\;))))
+                      (string-split value #\,))
+                 '())))
+    (if (null? langs)
+      (get-optional default #f)
+      langs)))
 
 (define (scratch-cgi-main client mount-point . args)
   (let-keywords* args ((error-proc (cut scratch-error-proc <>
-                                        (get-keyword :debug args #f))))
+                                        (get-keyword :debug args #f)))
+                       (default-langs '("ja" "en")))
     (cgi-main
      (lambda (params)
        (let* ((params (map (lambda (elem)
@@ -58,7 +75,8 @@
                                          :convert string->symbol
                                          :default ""))
               (type 'http)
-              (result (apply dispatch id action type (add-meta-info params)))
+              (result (apply dispatch id action type
+                             (add-meta-info params default-langs)))
               (header-info (car result))
               (body (tree->string (cadr result)))
               (cookies (construct-cookie-string

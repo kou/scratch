@@ -3,11 +3,13 @@
   (use www.cgi)
   (use srfi-1)
   (use srfi-11)
+  (use srfi-29)
+  (use text.gettext)
   (use gauche.parameter)
   (use gauche.sequence)
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
-          session parameters user-manager servlet-db
+          session parameters user-manager servlet-db app-gettext
           get-param get-action get-user
           get-servlet-value set-servlet-value!
           delete-servlet-value! servlet-value-exists?
@@ -19,7 +21,8 @@
           get-id set-id!
           generate-id&action
           login! logout! login?
-          valid-user? user-exists?)
+          valid-user? user-exists?
+          _ n_)
   )
 (select-module scratch.common)
 
@@ -39,6 +42,7 @@
 (define parameters (make-parameter '()))
 (define user-manager (make-parameter #f))
 (define servlet-db (make-parameter #f))
+(define app-gettext (make-parameter #f))
 
 (define (get-param keyword . options)
   (apply cgi-get-parameter (x->string keyword) (parameters)
@@ -135,5 +139,10 @@
   (valid-user? (user-manager) user password))
 (define-method user-exists? (user)
   (user-exists? (user-manager) user))
+
+(define (_ msg-id)
+  ((app-gettext) 'get msg-id))
+(define (n_ msg-id . opt)
+  (apply (app-gettext) 'nget msg-id opt))
 
 (provide "scratch/common")

@@ -5,6 +5,7 @@
   (use gauche.collection)
   (use gauche.threads)
   (use file.util)
+  (use text.gettext)
   (use marshal)
   (use dsm.server)
   (use scratch.session)
@@ -34,6 +35,8 @@
                  :init-form (make <user-manager-null>))
    (db :accessor db-of :init-keyword :db
        :init-form (make <scratch-db-null>))
+   (domain :accessor domain-of :init-keyword :domain
+           :init-value '("scratch"))
    ))
 
 (define-method initialize ((self <scratch-servlet>) args)
@@ -48,7 +51,7 @@
         (require-in-root-thread (module-name->path module-name)
                                 (current-module))
         (do () ((required-in-root-thread?))
-          (thread-sleep! 1))
+          (thread-sleep! 0.5))
         ;; (load (module-name->path module-name))
         (find-module module-name))))
 
@@ -59,16 +62,24 @@
                    (parameters args)
                    (user-manager (user-manager-of self))
                    (servlet-db (db-of self)))
-      (clear! (session))
-      (begin0
-          (make-response self
-                         (check-login-do (user-manager)
-                            (or (get-param *scratch-user-key* #f)
-                                (get-user))
-                            (get-param *scratch-password-key* #f)
-                            action
-                            (cut do-action self type <>)))
-        (store self)))))
+      (parameterize ((app-gettext (if (app-gettext)
+                                    (begin
+                                      (if (get-param "language" #f)
+                                        ((app-gettext) 'set-locale!
+                                         (get-param "language" #f)))
+                                      (app-gettext))
+                                    (apply make-gettext (domain-of self)
+                                           (get-param "language" '())))))
+        (clear! (session))
+        (begin0
+            (make-response self
+                           (check-login-do (user-manager)
+                              (or (get-param *scratch-user-key* #f)
+                                  (get-user))
+                              (get-param *scratch-password-key* #f)
+                              action
+                              (cut do-action self type <>)))
+          (store self))))))
 
 (define (get-valid-session table id)
   (and (id-exists? table id)
