@@ -9,6 +9,7 @@
   (use gauche.sequence)
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
+          *scratch-action-not-specify*
           session parameters user-manager servlet-db app-gettext
           get-param get-action get-user
           get-servlet-value set-servlet-value!
@@ -35,6 +36,7 @@
 (define *scratch-default-view-name* 'default-view)
 (define *scratch-deny-action-name* 'deny)
 (define *scratch-new-session-id* 0)
+(define *scratch-action-not-specify* #f)
 
 (define *scratch-default-working-directory* ".state")
 

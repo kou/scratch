@@ -91,18 +91,18 @@
           ((rxmatch #/^(?:>\s*)?(\S+):\s*$/ line)
            => (lambda (md)
                 (do ((next (read-line body) (read-line body))
-                     (acc params (cons next acc)))
+                     (acc '() (cons next acc)))
                     ((or (eof-object? next)
                          (rxmatch #/^(?:>\s*)?(\S+):/ next))
                      (let ((name (md 1))
-                           (value (string-join (reverse acc) "\n")))
+                           (value (string-join (reverse! acc) "\n")))
                        (if (eof-object? next)
-                           (list (list name value))
-                           (add-param name value
-                                      (parse-body
-                                       (open-input-string (add-line next body))
-                                       '()
-                                       default-param-name))))))))
+                         `((,name ,value) ,@params)
+                         (add-param name value
+                                    (parse-body
+                                     (open-input-string (add-line next body))
+                                     params
+                                     default-param-name))))))))
           ((rxmatch #/^(?:>\s*)?(\S+):\s*(.+)$/ line)
            => (lambda (md)
                 (add-param (md 1) (string-trim-right (md 2))

@@ -110,7 +110,8 @@
                                        :name *scratch-id-key*
                                        :value id)))
                       ,@(if (or (equal? action *scratch-default-action-name*)
-                                (equal? action (default-action)))
+                                (equal? action (default-action))
+                                (equal? action *scratch-action-not-specify*))
                           '()
                           (list (input :type 'hidden
                                        :name *scratch-action-key*
