@@ -1,6 +1,6 @@
 (define-module scratch.server
   (extend dsm.server scratch.scratch)
-  (use marshal)
+  (use msm.marshal)
   (use dsm.common)
   (use scratch.servlet)
   (export make-scratch-server add-mount-point! get-by-mount-point
@@ -15,7 +15,7 @@
   (set! (dsm-server-of self) (apply make-dsm-server args)))
 
 (define (make-scratch-server uri . keywords)
-  (apply make <scratch-server> uri  keywords))
+  (apply make <scratch-server> uri keywords))
 
 (define-method add-mount-point! ((self <scratch-server>) mount-point servlet)
   (add-mount-point! (dsm-server-of self) mount-point

@@ -6,13 +6,13 @@
   (use gauche.threads)
   (use file.util)
   (use text.gettext)
-  (use marshal)
+  (use msm.marshal)
   (use dsm.server)
   (use scratch.session)
   (use scratch.user.manager)
   (use scratch.db)
   (require "scratch/view/http") ;; for thread, parameter and load/require
-  (export <scratch-servlet> dispatch))
+  (export <scratch-servlet> dispatch db-of))
 (select-module scratch.servlet)
 
 (autoload scratch.user.manager.null <user-manager-null>)
@@ -122,8 +122,8 @@
   (let ((table (session-table-of servlet)))
     (write (filter (lambda (elem)
                      (and (valid-session? (cdr elem))
-                          (marshalizable? (car elem))
-                          (marshalizable? (cdr elem))))
+                          (marshallable? (car elem))
+                          (marshallable? (cdr elem))))
                    (marshal-table->alist table))
            out)))
 

@@ -61,7 +61,7 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
 
   * ((<esm|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=esm>))
   * ((<dsm|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=dsm>))
-  * ((<marshal|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=marshal>))
+  * ((<msm|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=msm>))
 
 == 入手方法
 

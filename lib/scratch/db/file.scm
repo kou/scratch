@@ -1,6 +1,6 @@
 (define-module scratch.db.file
   (extend scratch.db)
-  (use marshal)
+  (use msm.marshal)
   (use util.list)
   (use file.util)
   (use srfi-1)
@@ -34,8 +34,8 @@
   (call-with-output-file (filename-of self)
     (lambda (out)
       (write (filter (lambda (elem)
-                       (and (marshalizable? (car elem))
-                            (marshalizable? (cdr elem))))
+                       (and (marshallable? (car elem))
+                            (marshallable? (cdr elem))))
                      (hash-table->alist (db-of self)))
              out))))
 

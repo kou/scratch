@@ -3,7 +3,7 @@
   (use util.list)
   (use srfi-1)
   (use gauche.collection)
-  (use marshal)
+  (use msm.marshal)
   (use scratch.common)
   (export make-scratch-session
           response-info-list
@@ -65,7 +65,7 @@
               (slices init-values 2))
     session))
 
-(define-method marshalizable? ((self <scratch-session>))
+(define-method marshallable? ((self <scratch-session>))
   #t)
 
 (define-reader-ctor '<scratch-session>
@@ -76,7 +76,7 @@
   (format out "#,(<scratch-session> ~s ~s)"
           (timeout-of self)
           (fold (lambda (elem prev)
-                  (if (marshalizable? (cdr elem))
+                  (if (marshallable? (cdr elem))
                     (cons (make-keyword (car elem))
                           (cons (cdr elem)
                                 prev))
