@@ -5,13 +5,19 @@
   (use gauche.charconv)
   (use dsm.marshal)
   (export dsmp-request dsmp-response
-          version-of encoding-of length-of
+          version-of encoding-of length-of id-of
           make-marshal-table-using-socket)
   )
 (select-module dsm.common)
 
 (define dsmp-version 1)
 (define dsmp-delimiter ";")
+
+; (define-class <remote-object> ()
+;   ((eval-proc :init-keyword :eval-proc :accessor eval-proc)
+;    (id :accessor id-of)))
+
+; (define-method 
 
 (define-class <dsmp-header> ()
   ((version :init-keyword :version :accessor version-of)
@@ -101,6 +107,10 @@
         (eof-handler)
         (read-from-string body))))
 
+(define (need-remote-eval? obj table)
+  (and (reference-object? obj)
+       (not (using-same-table? table obj))))
+
 (define (dsmp-request marshaled-obj table in out . keywords)
   (let-keywords* keywords ((command "get")
                            (get-handler (lambda (x) x))
@@ -134,8 +144,7 @@
               (else obj))))
     
     (define (response-handler obj)
-      (if (and (reference-object? obj)
-               (not (using-same-table? table obj)))
+      (if (need-remote-eval? obj table)
           (lambda arg
             (eval-in-remote obj arg table in out
                             :get-handler get-handler
@@ -159,8 +168,7 @@
            (apply (unmarshal table (car body))
                   (map (lambda (elem)
                          (let ((obj (unmarshal table elem)))
-                           (if (and (reference-object? obj)
-                                    (not (using-same-table? table obj)))
+                           (if (need-remote-eval? obj table)
                                (lambda arg
                                  (eval-in-remote obj arg table
                                                  in out

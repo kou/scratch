@@ -5,7 +5,7 @@
   (use math.mt-random)
   (use gauche.collection)
   (export marshalizable? reference-object? using-same-table?
-          marshal unmarshal
+          marshal unmarshal id-get id-ref
           make-marshal-table)
   )
 (select-module dsm.marshal)

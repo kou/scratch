@@ -1,13 +1,16 @@
 (define-module number-table
   (use util.list)
+  (use srfi-27)
   (use gauche.sequence)
   (export
    make-numbers sort-numbers flatten
    sort-number-table available-ways empty-cell-index
    make-number-table row-number-of column-number-of
-   move swap-cell! get-cell set-cell! clear? shuffle-table)
+   move! swap-cell! get-cell set-cell! clear? shuffle-table!)
   )
 (select-module number-table)
+
+(random-source-randomize! default-random-source)
 
 (define (make-numbers init max)
   (cond ((< init max)
@@ -73,7 +76,7 @@
                 (< (+ 1 y) (row-number-of table))) ; south
         (values #f #f #f #f))))
 
-(define (move way table)
+(define (move! way table)
   (receive (x y)
       (empty-cell-index table)
     (case way
@@ -102,12 +105,14 @@
   (equal? (sort-numbers (flatten (make-number-table (row-number-of table))))
           (flatten table)))
 
-(define (shuffle-table table)
+(define (shuffle-table! table)
   (let ((max-num (row-number-of table)))
-    (swap-cell! table
-                (remainder (sys-random) max-num)
-                (remainder (sys-random) max-num)
-                (remainder (sys-random) max-num)
-                (remainder (sys-random) max-num))))
+    (dotimes (i (* max-num max-num (random-integer max-num)))
+      (swap-cell! table
+                  (random-integer max-num)
+                  (random-integer max-num)
+                  (random-integer max-num)
+                  (random-integer max-num))))
+  table)
 
 (provide "number/table")

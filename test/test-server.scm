@@ -25,4 +25,15 @@
                                (list value
                                      (get-by-mount-point server key)))))
      )
+    ("get-by-id test"
+     (let ((id-get (with-module dsm.marshal id-get))
+           (marshal-table-of (with-module dsm.server marshal-table-of)))
+       (assert-each assert-equal
+                    `(1 "str" sym () #() ,(lambda () #f))
+                    :prepare (lambda (obj)
+                               (let ((id (id-get (marshal-table-of server)
+                                                 obj)))
+                                 (list obj
+                                     (get-by-id server id))))))
+     )
     ))

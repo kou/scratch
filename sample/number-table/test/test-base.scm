@@ -112,31 +112,40 @@
                                (3 2))
                              1 0
                              1 1)))
-  ("move test"
+  ("move! test"
    (assert-equal '((1 2)
                    (3 #f))
-                 (move :east
-                       '((1 2)
-                         (#f 3))))
+                 (move! :east
+                        '((1 2)
+                          (#f 3))))
    (assert-equal '((1 2)
                    (#f 3))
-                 (move :west
-                       '((1 2)
-                         (3 #f))))
+                 (move! :west
+                        '((1 2)
+                          (3 #f))))
    (assert-equal '((1 #f)
                    (3 2))
-                 (move :north
-                       '((1 2)
-                         (3 #f))))
+                 (move! :north
+                        '((1 2)
+                          (3 #f))))
    (assert-equal '((1 2)
                    (3 #f))
-                 (move :south
-                       '((1 #f)
-                         (3 2)))))
+                 (move! :south
+                        '((1 #f)
+                          (3 2)))))
   ("clear? test"
    (assert-true (clear? '((1 2)
                           (3 #f))))
    (assert-false (clear? '((1 #f)
                            (3 2)))))
-   )
+  ("shuffle-table test"
+   (let* ((row-size 4)
+          (table (make-number-table row-size)))
+     (assert-true (clear? table))
+     (shuffle-table! table)
+     (assert-false (clear? table))
+     (assert-equal `(,@(make-numbers 1 (- (* row-size row-size) 1))
+                     #f)
+                   (sort-numbers (flatten table)))))
+  )
 
