@@ -21,7 +21,8 @@
                       prev)
                 prev)))
         params
-        '(("SCRIPT_NAME" "script-name"))))
+        '(("SCRIPT_NAME" "script-name")
+          ("HTTP_HOST" "host-name"))))
 
 (define (scratch-cgi-main client mount-point . args)
   (let-keywords* args ((error-proc (cut scratch-error-proc <>

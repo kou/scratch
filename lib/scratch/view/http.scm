@@ -13,7 +13,7 @@
           load-esm-files define-scratch-esm
           input
           h hd u ue
-          href form alist->attributes
+          href full-href form alist->attributes
           user-name-input password-input
           default-view)
   )
@@ -85,6 +85,10 @@
                                '()
                                (list (list *scratch-action-key* action)))
                          ,@(slices params 2)))))))
+
+(define (full-href . params)
+  (let ((host (get-param "host-name" "localhost")))
+    #`"http://,|host|,(apply href params)"))
 
 (define (input . keywords)
   (tree->string `("<input "
