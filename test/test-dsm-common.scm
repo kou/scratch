@@ -1,8 +1,16 @@
 #!/usr/bin/env gosh
 
 (use test.unit)
-(use dsm.marshal)
-(use dsm.common)
+
+(define-module test-dsm-common
+  (use test.unit)
+  (use dsm.marshal)
+  (use dsm.common))
+
+(select-module test-dsm-common)
+(define (x->dsm-header->string table obj)
+  (with-module dsm.common
+    (x->dsm-header->string table obj)))
 
 (define-assertion (assert-dsm-header header version encoding length command)
   (define (make-message-handler expect type)
@@ -32,10 +40,10 @@
      (lambda () (set! table (make-marshal-table host port))))
     ("make-header test"
      (assert-each assert-equal
-                  `(("v=1;e=UTF-8;l=1;c=get\n" . 1)
-                    ("v=1;e=UTF-8;l=5;c=get\n" . "abc")
-                    ("v=1;e=UTF-8;l=2;c=get\n" . ())
-                    ("v=1;e=UTF-8;l=5;c=get\n" . (1 2))
+                  `(("v=1;e=UTF-8;l=1;c=get" . 1)
+                    ("v=1;e=UTF-8;l=5;c=get" . "abc")
+                    ("v=1;e=UTF-8;l=2;c=get" . ())
+                    ("v=1;e=UTF-8;l=5;c=get" . (1 2))
                     )
                   :prepare (lambda (item)
                              (list (car item)
@@ -55,6 +63,7 @@
                   :prepare
                   (lambda (item)
                     (list (string-append (x->dsm-header->string table item)
+                                         "\n"
                                          (marshal table item))
                           (let ((in (open-input-string (marshal table item)))
                                 (out (open-output-string)))

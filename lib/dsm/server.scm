@@ -15,6 +15,8 @@
    (mount-table :accessor mount-table-of)
    (socket :accessor socket-of)
    (marshal-table :accessor marshal-table-of)
+   (timeout :init-keyword :timeout :accessor timeout-of
+            :init-value '(1 0))
    ))
 
 (define-method initialize ((self <dsm-server>) . args)
@@ -66,9 +68,10 @@
                    (socket-fd (socket-of self))
                    accept-handler
                    '(r))
-    (do () (#f) (selector-select selector))))
+    (do () ((eq? 'shutdown (socket-status (socket-of self))))
+      (selector-select selector (timeout-of self)))))
 
 (define-method stop-dsm-server ((self <dsm-server>))
-  (socket-close (socket-of self)))
+  (socket-shutdown (socket-of self) 2))
 
 (provide "dsm/server")

@@ -2,6 +2,7 @@
   (use srfi-1)
   (use srfi-10)
   (use util.list)
+  (use math.mt-random)
   (use gauche.collection)
   (export marshalizable? reference-object? using-same-table?
           marshal unmarshal
@@ -9,8 +10,13 @@
   )
 (select-module dsm.marshal)
 
+(define mt-random (make <mersenne-twister> :seed (sys-time)))
+(define (random)
+  (mt-random-real (make <mersenne-twister>)))
+
 (define-class <reference-object> ()
-  ((id :init-keyword :id :accessor id-of)
+  ((ref :init-keyword :ref :accessor ref-of)
+   (id :init-keyword :id :accessor id-of)
    (host :init-keyword :host :accessor host-of)
    (port :init-keyword :port :accessor port-of))
   )
@@ -19,63 +25,78 @@
   (is-a? obj <reference-object>))
          
 (define-reader-ctor '<reference-object>
-  (lambda (id host port)
-    (make <reference-object> :id id :host host :port port)))
+  (lambda (ref id host port)
+    (make <reference-object> :ref ref :id id :host host :port port)))
 
 (define-method write-object ((self <reference-object>) out)
-  (format out "#,(<reference-object> ~s ~s ~s)"
+  (format out "#,(<reference-object> ~s ~s ~s ~s)"
+          (ref-of self)
           (id-of self)
           (host-of self)
           (port-of self)
           ))
 
 (define-method object-hash ((self <reference-object>))
-  (logior (hash (id-of self))
+  (logior (hash (ref-of self))
+          (hash (id-of self))
           (hash (host-of self))
           (hash (port-of self))))
 
+(define (equal-reference-object? ref1 ref2)
+  (and (= (ref-of ref1) (ref-of ref2))
+       (= (id-of ref1) (id-of ref2))
+       (string=? (host-of ref1) (host-of ref2))
+       (= (port-of ref1) (port-of ref2))))
+
 (define-method object-equal? ((self <reference-object>) other)
   (and (is-a? other <reference-object>)
-       (= (id-of self) (id-of other))
-       (string=? (host-of self) (host-of other))
-       (= (port-of self) (port-of other))))
+       (equal-reference-object? self other)))
 
 (define-method object-equal? (self (other <reference-object>))
   (and (is-a? other <reference-object>)
-       (= (id-of self) (id-of other))
-       (string=? (host-of self) (host-of other))
-       (= (port-of self) (port-of other))))
+       (equal-reference-object? self other)))
+
+(define-class <marshal-table> ()
+  ((id :accessor id-of)
+   (obj->id :accessor obj->id-of)
+   (id->obj :accessor id->obj-of)
+   (counter :accessor counter-of)
+   (host :init-keyword :host :accessor host-of)
+   (port :init-keyword :port :accessor port-of))
+  )
+
+(define-method initialize ((self <marshal-table>) . args)
+  (next-method)
+  (slot-set! self 'id (random))
+  (slot-set! self 'obj->id (make-hash-table 'eq?))
+  (slot-set! self 'id->obj (make-hash-table 'eqv?))
+  (slot-set! self 'counter 0))
 
 (define (make-marshal-table host port)
-  (let ((obj->id (make-hash-table 'eq?))
-        (id->obj (make-hash-table 'eqv?))
-        (cnt 0))
-    (lambda (command . arg)
-      (apply
-       (case command
-         ((get)
-          (lambda (obj)
-            (if (eq? obj #f)
-                0
-                (or (hash-table-get obj->id obj #f)
-                    (begin (inc! cnt)
-                           (hash-table-put! obj->id obj cnt)
-                           (hash-table-put! id->obj cnt obj)
-                           cnt)))))
-         ((ref)
-          (lambda (id)
-            (if (= id 0)
-                #f
-                (or (hash-table-get id->obj id #f)
-                    (error "no object with id: " id)))))
-         ((ct)
-          (lambda ()
-            (hash-table->alist id->obj)))
-         ((host)
-          (lambda () host))
-         ((port)
-          (lambda () port)))
-       arg))))
+  (make <marshal-table> :host host :port port))
+
+(define-method update-counter! ((table <marshal-table>))
+  (inc! (counter-of table)))
+
+(define false-id 0)
+
+(define-method id-get ((table <marshal-table>) obj)
+  (if (eq? obj #f)
+      false-id
+      (or (hash-table-get (obj->id-of table) obj #f)
+          (begin (update-counter! table)
+                 (hash-table-put! (obj->id-of table) obj (counter-of table))
+                 (hash-table-put! (id->obj-of table) (counter-of table) obj)
+                 (counter-of table)))))
+
+(define-method id-ref ((table <marshal-table>) id)
+  (if (= id false-id)
+      #f
+      (or (hash-table-get (id->obj-of table) id #f)
+          (error "no object with id: " id))))
+
+(define-method ct ((table <marshal-table>)) ;; for debug
+  (hash-table->alist (id->obj-of table)))
 
 (define-method marshalizable? (obj)
   #f)
@@ -106,8 +127,15 @@
 
 (define (using-same-table? table object)
   (and (reference-object? object)
-       (string=? (table 'host) (host-of object))
-       (= (table 'port) (port-of object))))
+       (string=? (host-of table) (host-of object))
+       (= (port-of table) (port-of object))))
+
+(define (make-reference-object-from-marshal-table table obj)
+  (make <reference-object>
+    :ref (id-get table obj)
+    :id (id-of table)
+    :host (host-of table)
+    :port (port-of table)))
 
 (define (marshal table object)
   (define (make-marshalized-object obj)
@@ -120,10 +148,7 @@
                 (and (reference-object? obj)
                      (not (using-same-table? table obj))))
             obj
-            (make <reference-object>
-              :id (table 'get obj)
-              :host (table 'host)
-              :port (table 'port)))))
+            (make-reference-object-from-marshal-table table obj))))
 
   (let ((out (open-output-string)))
     (write (make-marshalized-object object) out)
@@ -136,10 +161,9 @@
                 rec
                 obj)
         (if (using-same-table? table obj)
-            (table 'ref (id-of obj))
+            (id-ref table (ref-of obj))
             obj)))
 
   (rec object))
-
 
 (provide "dsm/marshal")

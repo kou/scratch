@@ -37,7 +37,8 @@
                      (make-hash-table)
                      (with-module dsm.marshal
                        (make <reference-object>
-                         :id 1
+                         :ref 1
+                         :id (id-of table)
                          :host "example.com"
                          :port 5963))
                      (list 1 (lambda (x) x) '(1)))))
