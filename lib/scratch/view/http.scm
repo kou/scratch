@@ -3,12 +3,14 @@
   (use srfi-11)
   (use rfc.uri)
   (use gauche.regexp)
+  (use gauche.parameter)
   (use file.util)
   (use util.list)
   (use text.tree)
   (use text.html-lite)
   (use esm.gauche)
-  (export load-esm-files define-scratch-esm
+  (export use-cookie-only default-action
+          load-esm-files define-scratch-esm
           input
           h hd u ue
           href form alist->attributes
@@ -16,6 +18,9 @@
           default-view)
   )
 (select-module scratch.view.http)
+
+(define use-cookie-only (make-parameter #t))
+(define default-action (make-parameter #f))
 
 (define (default-view)
   (html:html
@@ -72,8 +77,13 @@
     (h (string-append (get-param "script-name" "")
                       "?"
                       (alist->params-string
-                       `(,(list *scratch-id-key* id)
-                         ,(list *scratch-action-key* action)
+                       `(,@(if use-cookie-only
+                               '()
+                               (list (list *scratch-id-key* id)))
+                         ,@(if (or (equal? action *scratch-default-action-name*)
+                                   (equal? action (default-action)))
+                               '()
+                               (list (list *scratch-action-key* action)))
                          ,@(slices params 2)))))))
 
 (define (input . keywords)
@@ -88,12 +98,17 @@
                     "\" "
                     ,(alist->attributes-string (slices attrs 2))
                     ">\n"
-                    ,(input :type 'hidden
-                            :name *scratch-id-key*
-                            :value id)
-                    ,(input :type 'hidden
-                            :name *scratch-action-key*
-                            :value action)))))
+                    ,@(if use-cookie-only
+                          '()
+                          (list (input :type 'hidden
+                                       :name *scratch-id-key*
+                                       :value id)))
+                    ,@(if (or (equal? action *scratch-default-action-name*)
+                              (equal? action (default-action)))
+                          '()
+                          (list (input :type 'hidden
+                                       :name *scratch-action-key*
+                                       :value action)))))))
 
 (define (user-name-input . attrs)
   (apply input
