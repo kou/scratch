@@ -73,7 +73,7 @@
                  (password (get-param *scratch-password-key*))
                  (password))
                 (if (valid-user? user password)
-                    'jump-to-main
+                    'main ; 'jump-to-main ; or (do-main)
                     (begin
                       (set-cycle-value!
                        :message (if (user-exists? user)

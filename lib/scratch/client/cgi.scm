@@ -1,4 +1,5 @@
 (define-module scratch.client.cgi
+  (extend scratch.scratch)
   (use www.cgi)
   (use srfi-1)
   (use rfc.cookie)

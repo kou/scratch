@@ -1,4 +1,0 @@
-<% (set-response-value!
-    :location (href :action 'main
-		    *scratch-user-key* (get-param *scratch-user-key*)
-		    *scratch-password-key* (get-param *scratch-password-key*))) %>

@@ -13,6 +13,14 @@
   )
 (select-module scratch.view.http)
 
+(define (default-view)
+  (html:html
+   (html:head
+    (html:title "DEFAULT VIEW"))
+   (html:body
+    (html:h1 "DEFUALT VIEW")
+    (html:p "This is default view. You must be overwrite this."))))
+
 (define (h string)
   (with-string-io (x->string string) html-escape))
 
@@ -85,10 +93,8 @@
   (let ((args (gensym))
         (src `(esm-result* ,(call-with-input-file filename port->string))))
     `(define (,name . ,args)
-       (let-keywords* ,args ((params #f))
-         (parameterize ((parameters (if params
-                                        `(,@params ,@(parameters))
-                                        (parameters))))
+       (let-keywords* ,args ((params '()))
+         (parameterize ((parameters `(,@params ,@(parameters))))
            ,src)))))
 
 (define-macro (load-esm-files pattern)

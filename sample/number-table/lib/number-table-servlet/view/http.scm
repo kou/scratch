@@ -4,11 +4,9 @@
   (use gauche.parameter)
   (use srfi-1)
   (use esm.gauche)
-  (use scratch.session)
   (use scratch.view.http)
-  (use scratch.db)
   (use number-table-servlet.clear-list)
-  (export)
+  (export jump-to-main)
   )
 (select-module number-table-servlet.view.http)
 
@@ -19,6 +17,13 @@
 
 (define (default-view)
   (main))
+
+(define (jump-to-main)
+  (set-response-value!
+    :location (href :action 'main
+		    *scratch-user-key* (get-param *scratch-user-key*)
+		    *scratch-password-key* (get-param *scratch-password-key*)))
+  "")
 
 (define (available-ways)
   (map (lambda (way available)

@@ -1,4 +1,5 @@
 (define-module scratch.session
+  (extend scratch.scratch)
   (use util.list)
   (use scratch.common)
   (export make-scratch-session

@@ -1,4 +1,5 @@
 (define-module scratch.server
+  (extend scratch.scratch)
   (use marshal)
   (use dsm.server)
   (use dsm.common)

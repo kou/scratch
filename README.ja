@@ -238,43 +238,144 @@ sample-servlet.scmは必須ではありませんが，慣習的にサーブレッ
 
 === アクション
 
+アクションは"サーブレットのモジュール名.action"という名前の
+モジュールに定義します．この例ではsample-servletがサーブレッ
+トのモジュール名なのでアクションのモジュール名は
+sample-servlet.actionになります．
+
+アクションを定義するスクリプトsample-servlet/action.scmは以
+下のようになるでしょう．
+
+  (define-module sample-servlet.action
+    (use scratch.action)
+    (use ...)
+    (export ...))
+  (select-module sample-servlet.action)
+
+  アクションの定義
+
+  (provide "sample-servlet/action")
+
+アクションは"do-"で始まる変数に束縛された引数の無い手続きで，
+クライアントに返すビューを指定するシンボルを返します．サーブ
+レットはクライアントから要求されたアクションに対応する"do- 
+アクション"という変数に束縛された手続きを呼び出します．もし，
+"do-アクション"という変数がexportされていなければ
+"do-default"に束縛されている手続きを呼び出します．
+
+"do-xxx"に束縛された手続きはアクションを定義しているモジュー
+ルと同じ環境で評価されます．
+
 === ビュー
+
+ビューは"サーブレットのモジュール名.view.クライントのタイプ"
+という名前のモジュールに定義します．クライアントのタイプはプ
+ロトコルと同じになります．例えば，クライアントがCGIだとする
+と"http"になります．よって，クライアントがCGIだと
+sample-servlet.view.httpがビューのモジュール名になります．
+
+ビューを定義するスクリプトsample-servlet/view/http.scmは以下
+のようになるでしょう．
+
+  (define-module sample-servlet.view.http
+    (use esm.gauche)
+    (use scratch.view.http)
+    (use ...)
+    (export ...)
+    )
+  (select-module sample-servlet.view.http)
+
+  ビューの定義や補助手続き
+  
+  (provide "sample-servlet/view/http")
+
+ビューは引数の無い手続きでクライアントへのレスポンスを返しま
+す．クライアントがCGIの場合はHTTPのボディとなる文字列を返しま
+す．
+
+ビューが返すものは文字列であることが多いです．そのため，
+scratchではesmをサポートしています．load-esm-filesは引数とし
+て与えられたglob(7)のパターンによってマッチしたファイルをesm 
+ファイルとして読み込み，S式にコンパイルされたesmファイルを実
+行する手続きを定義します．定義された手続きは拡張子を除いた
+esmファイル名と同じ名前のシンボルに束縛され，そのシンボルは
+exportされます．
+
+例えば，以下のようにload-esm-filesを呼び出したとします．
+
+  (load-esm-files "sample-servlet/view/http/*.esm")
+  
+ここで，sample-servlet/view/http/以下に以下のようなファイル
+があったとします．
+
+  * test.txt
+  * main.esm
+  * login.esm
+
+このとき，main.esmとlogin.esmがesmファイルとしてコンパイルさ
+れ，それぞれを実行する手続きはmain, loginというシンボルに束
+縛され，exportされます．よって，main.esmをesmファイルとして
+実行するには以下のようにします．
+
+  (main)
+
+サーブレットはアクションが返したシンボルがビューのモジュール
+でexportされていればシンボルに束縛されている手続きを呼び出し
+ます．もし，exportされていなければdefault-viewという手続きを
+呼び出します．サーブレットはビューの手続きをビューのモジュー
+ル内で評価します．
 
 === scratchが管理するデータ
 
 scratchで管理するデータには3種類のスコープがあります．
 
   (1) サーブレット単位
+      
+      scratchサーバにマウントされたサーブレット毎に持つデー
+      タです．同じマウントポイントのサーブレット内でデータを
+      共有できます．
+      
+      アクション/ビューではget-servlet-value,
+      set-servlet-value!, delete-servlet-value!,
+      servlet-value-exists?でアクセスできます．
+
   (1) セッション単位
+      
+      セッション毎に持つデータです．ユーザ情報等はこのスコー
+      プに保存されています．
+      
+      アクション/ビューではget-value, set-value!,
+      delete-value!, value-exists?でアクセスできます．
+
   (1) サイクル単位
+      
+      一回のリクエスト/レスポンス毎に持つデータです．
+      
+      アクション/ビューではget-cycle-value,
+      set-cycle-value!, delete-cycle-value!,
+      value-cycle-exists?でアクセスできます．
+      
+=== その他のデータ
 
-== 使い方
-
-scratchを用いたWebベースアプリケーション開発は以下のようにな
-るでしょう．
-
-  * アプリケーションの機能を提供するライブラリの作成
-  * クライアントの要求に対応するアクションの作成
-  * クライアントに返す結果を生成するesmの作成
-
-最初のライブラリの作成はscratchに依存しないようにするべきで
-す．依存しないようにするとscratchを使うことをやめても使いま
-わすことができます．
-
-ここでは，ライブラリはすでにできているものとしてアクションの
-作成とesmの作成を扱います．
-
-=== アクションの作成
-
-まず，アクションを扱うモジュールを作成します．
-
-  (define-module sample-app-servlet
-    (use scratch.servlet)
-    (use sample-app))
-  (select-module sample-app-servlet)
-  (provide "sample-app-servlet")
-
-ここで，sample-appというモジュールがアプリケーションの機能を
-提供するライブラリで，sample-app-servletがクライアントの要求
-に対応するアクションを扱うモジュールです．
+  (1) レスポンスのメタ情報
+      
+      クライアントに返すレスポンス以外にレスポンスのメタ情報
+      も渡したいことがあります．HTTPではヘッダに関する情報が
+      それにあたります．scratchでは一回のリクエスト/レスポン
+      ス単位のデータとしてレスポンスのメタ情報を扱います．
+      
+      レスポンスのメタ情報はget-response-value,
+      set-response-value!, delete-response-value!,
+      value-response-exists?でアクセスできます．アクションで
+      もビューでもアクセスできますが，レスポンスのメタ情報は
+      ビュー毎に扱い，アクションでは関知するべきではありませ
+      ん．
+      
+      例えば，HTTPでクライアントにmainというアクションを要求
+      するように移動させるには以下のようなビューを定義し，
+      exportします．
+      
+        (define (jump-to-main)
+          (set-response-value! :location (href :action 'main))
+          "")
 
