@@ -68,7 +68,7 @@
                                     (begin
                                       (if (get-param "language" #f)
                                         ((app-gettext) 'set-locale!
-                                         (get-param "language" #f)))
+                                         (get-param "language")))
                                       (app-gettext))
                                     (make-gettext (domain-of self)
                                                   (get-param "language" #f)

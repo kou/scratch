@@ -45,21 +45,23 @@
                   action)))))
 
 (define (scratch-mail-main client mount-point mail . args)
-  (let ((in (cond ((input-port? mail) mail)
-                  ((string? mail) (open-input-string mail))
-                  (else (error #`",mail must be input-port or string"))))
-        (type 'smtp))
-    (let*-values (((headers mail-body) (port->header-list&body in))
-                  ((id action)
-                   (id&action (rfc822-header-ref headers "subject" ""))))
-      (let* ((dispatch (client mount-point))
-             (result (apply dispatch id action type
-                            (parse-body (open-input-string mail-body))))
-             (header-info (car result))
-             (body (open-input-string (cadr result))))
-        (send-mail "localhost" 25 body
-                   (get-keyword :from header-info)
-                   (get-keyword :to header-info))))))
+  (let-keywords* args ((default-param-name "body"))
+    (let ((in (cond ((input-port? mail) mail)
+                    ((string? mail) (open-input-string mail))
+                    (else (error #`",mail must be input-port or string"))))
+          (type 'smtp))
+      (let*-values (((headers mail-body) (port->header-list&body in))
+                    ((id action)
+                     (id&action (rfc822-header-ref headers "subject" ""))))
+        (let* ((dispatch (client mount-point))
+               (result (apply dispatch id action type
+                              (parse-body (open-input-string mail-body)
+                                          default-param-name)))
+               (header-info (car result))
+               (body (open-input-string (cadr result))))
+          (send-mail "localhost" 25 body
+                     (get-keyword :from header-info)
+                     (get-keyword :to header-info)))))))
 
 (define (add-param name value params)
   (let ((param (assoc name params)))
@@ -69,7 +71,7 @@
           params)
         (cons (list name value) params))))
 
-(define (parse-body body)
+(define (parse-body body default-param-name)
   (define (add-line line in)
     (string-join (cons line (port->string-list in))
                  "\n"))
@@ -94,7 +96,7 @@
            => (lambda (md)
                 (add-param (md 1) (string-trim-right (md 2))
                            (parse-body body))))
-          (else `(("body" ,(add-line line body)))))))
+          (else `((,default-param-name ,(add-line line body)))))))
 
 ;; from scmail
 (define (send-mail host port iport mail-from recipients)

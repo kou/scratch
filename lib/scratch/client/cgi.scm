@@ -42,7 +42,9 @@
             "SCRIPT_NAME") "script-name")
           ("HTTP_HOST" "host-name")
           ((("HTTP_ACCEPT_LANGUAGE"
-             ,(cut parse-accept-language <> default-langs)))
+             ,(lambda (value)
+                (or (cgi-get-parameter "language" params :default #f)
+                    (parse-accept-language value default-langs)))))
            "language"))))
 
 (define (parse-accept-language value . default)
@@ -54,12 +56,12 @@
                  '())))
     (if (null? langs)
       (get-optional default #f)
-      langs)))
+      (reverse langs))))
 
 (define (scratch-cgi-main client mount-point . args)
   (let-keywords* args ((error-proc (cut scratch-error-proc <>
                                         (get-keyword :debug args #f)))
-                       (default-langs '("ja" "en")))
+                       (default-langs (reverse '("ja" "en"))))
     (cgi-main
      (lambda (params)
        (let* ((params (map (lambda (elem)
