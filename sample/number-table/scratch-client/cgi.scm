@@ -1,4 +1,4 @@
-#!/usr/local/bin/gosh -ugauche.interactive
+#!/usr/bin/env gosh
 
 (use dsm.client)
 (use scratch.client.cgi)

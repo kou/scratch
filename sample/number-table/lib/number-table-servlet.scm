@@ -17,10 +17,11 @@
     :db (make <scratch-db-file>)
     :user-manager (make <user-manager-file>
                     :default-authority 'deny
-                    :authority-map '((#t add-user)))))
+                    :authority-map '((#t #t)
+                                     (#f add-user)))))
 
 (define (make-session)
-  (let ((table (make-number-table 1)))
+  (let ((table (make-number-table 3)))
     (shuffle-table! table)
     (let ((sess (make-scratch-session :table table
                                       :count 0)))

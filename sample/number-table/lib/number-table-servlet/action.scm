@@ -3,7 +3,7 @@
   (use scratch.action)
   (use number-table)
   (use number-table-servlet.clear-list)
-  (export update-value! do-move do-deny))
+  (export update-value! do-move do-deny do-main))
 (select-module number-table-servlet.action)
 
 (define (get-available-ways table)
@@ -73,7 +73,7 @@
                  (password (get-param *scratch-password-key*))
                  (password))
                 (if (valid-user? user password)
-                    'main ; 'jump-to-main ; or (do-main)
+                    'jump-to-main
                     (begin
                       (set-cycle-value!
                        :message (if (user-exists? user)

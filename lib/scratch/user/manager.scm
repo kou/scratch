@@ -35,18 +35,30 @@
                                user password request-action action-handler)
   (if (valid-user? self user password)
       (login! user))
-  (action-handler (if (allow? self user request-action)
+  (action-handler (if (allow? self (get-user) request-action)
                       request-action
                       *scratch-deny-action-name*)))
 
 (define (allow? manager user action)
-  (or (login? user)
-      (let ((auth-info (or (assoc user (authority-map-of manager))
-                           (assoc #t (authority-map-of manager)))))
-        (if auth-info
-            (and (memq action (cdr auth-info))
-                 (not (eq? 'allow (default-authority-of manager))))
-            (eq? 'allow (default-authority-of manager))))))
+  (let ((allow (eq? 'allow (default-authority-of manager))))
+    (if (need-invert? action (get-auth-info user (authority-map-of manager)))
+        (not allow)
+        allow)))
+
+(define (get-auth-info user authority-map)
+  (cond ((null? authority-map) '())
+        ((eq? #f user)
+         (if (eq? #f (caar authority-map))
+             (cdar authority-map)
+             (get-auth-info user (cdr authority-map))))
+        ((memq (caar authority-map) (list #t user))
+         (cdar authority-map))
+        (else (get-auth-info user (cdr authority-map)))))
+
+(define (need-invert? action auth-info)
+  (cond ((null? auth-info) #f)
+        ((memq (car auth-info) (list #t action)) #t)
+        (else (need-invert? action (cdr auth-info)))))
 
 (define-method store ((self <user-manager>))
   (error "not implemented"))
