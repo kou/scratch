@@ -1,0 +1,101 @@
+(define-module number-table
+  (use util.list)
+  (use gauche.sequence)
+  (export
+   make-numbers sort-numbers flatten
+   sort-number-table available-ways empty-cell-index
+   make-number-table row-number-of column-number-of
+   move swap-cell! get-cell set-cell!)
+  )
+(select-module number-table)
+
+(define (make-numbers init max)
+  (cond ((< init max)
+         (cons init (make-numbers (+ 1 init) max)))
+        ((= init max)
+         (list init))
+        (else
+         '())))
+
+(define (sort-numbers lst)
+  (sort lst (lambda (x y)
+              (cond ((not x) #f)
+                    ((not y) #t)
+                    (else (< x y))))))
+
+(define (sort-number-table table)
+  (sort-numbers (flatten table)))
+
+(define (flatten tree)
+  (cond ((null? tree) '())
+        ((pair? (car tree))
+         (append (flatten (car tree))
+                 (flatten (cdr tree))))
+        (else
+         (cons (car tree)
+               (flatten (cdr tree))))))
+
+(define (make-number-table num-of-row)
+  (slices `(,@(make-numbers 1 (- (* num-of-row num-of-row) 1))
+            #f)
+          num-of-row))
+
+(define-method row-number-of (table)
+  (length table))
+
+(define-method column-number-of (table)
+  (cond ((null? table) 0)
+        ((pair? (car table)) (length (car table)))
+        (else 1)))
+
+(define (empty-cell-index table)
+  (apply values
+         (call/cc
+          (lambda (break)
+            (for-each-with-index
+             (lambda (row-index row)
+               (let ((cell-index (find-index (cut eq? #f <>)
+                                             row)))
+                 (if cell-index
+                     (break (list cell-index row-index))
+                     #f)))
+             table)
+            ;; not found
+            (list #f #f)))))
+                                
+(define (available-ways table)
+  (receive (x y)
+      (empty-cell-index table)
+    (if (and x y)
+        (values (> x 0) ; west
+                (> y 0) ; north
+                (< (+ 1 x) (column-number-of table)) ; east
+                (< (+ 1 y) (row-number-of table))) ; south
+        (values #f #f #f #f))))
+
+(define (move way table)
+  (receive (x y)
+      (empty-cell-index table)
+    (case way
+      ((:east) (swap-cell! table x y (+ x 1) y))
+      ((:west) (swap-cell! table x y (- x 1) y))
+      ((:north) (swap-cell! table x y x (- y 1)))
+      ((:south) (swap-cell! table x y x (+ y 1)))
+      (else (error "bad way" way)))
+    table))
+
+(define (swap-cell! table x1 y1 x2 y2)
+  (let* ((value1 (get-cell table x1 y1))
+         (value2 (get-cell table x2 y2)))
+    (set-cell! table x1 y1 value2)
+    (set-cell! table x2 y2 value1)
+    table))
+
+(define (get-cell table x y)
+  (ref (ref table y) x))
+
+(define (set-cell! table x y value)
+  (set! (ref (ref table y) x) value)
+  table)
+
+(provide "number/table")

@@ -81,24 +81,32 @@
   (display body output)
   (flush output))
 
-(define (read-dsmp input)
-;  (p (list "reading..."))
-  (let* ((header (read-dsmp-header input))
-         (body (read-dsmp-body (length-of header) input)))
-;    (p (list "read" (dsmp-header->string header) body))
-    (values header body)))
+(define (read-dsmp input . keywords)
+  (let-keywords* keywords ((eof-handler (lambda () "Got eof")))
+    ;; (p (list "reading..."))
+    (let* ((header (read-dsmp-header input eof-handler))
+           (body (read-dsmp-body (length-of header) input eof-handler)))
+      ;; (p (list "read" (dsmp-header->string header) body))
+      (values header body))))
   
-(define (read-dsmp-header input)
-  (parse-dsmp-header (read-line input)))
+(define (read-dsmp-header input eof-handler)
+  (let ((header (read-line input)))
+    (if (eof-object? header)
+        (eof-handler)
+        (parse-dsmp-header header))))
 
-(define (read-dsmp-body length input)
-  (read-from-string
-   (read-block length input)))
+(define (read-dsmp-body length input eof-handler)
+  (let ((body (read-block length input)))
+    (if (eof-object? body)
+        (eof-handler)
+        (read-from-string body))))
 
 (define (dsmp-request marshaled-obj table in out . keywords)
   (let-keywords* keywords ((command "get")
                            (get-handler (lambda (x) x))
-                           (post-handler (lambda (x) x)))
+                           (post-handler (lambda (x) x))
+                           (eof-handler (lambda ()
+                                          (print "Got eof from server"))))
     (define (dsmp-handler)
       (dsmp-write (dsmp-header->string
                    (make-dsmp-header-from-string marshaled-obj
@@ -106,7 +114,7 @@
                   marshaled-obj
                   out)
       (receive (header body)
-          (read-dsmp in)
+          (read-dsmp in :eof-handler eof-handler)
         (handle-response header body)))
 
     (define (handle-response header body)
@@ -164,19 +172,21 @@
           (else (error "unknown command" command)))))
 
 (define (dsmp-response table input output . keywords)
-  (receive (header body)
-      (read-dsmp input)
-    (let ((marshalized-body (marshal
-                             table
-                             (apply handle-dsmp-body
-                                    (command-of header)
-                                    body table
-                                    input output
-                                    keywords))))
-      (dsmp-write (dsmp-header->string
-                   (make-dsmp-header-from-string marshalized-body
-                                                 :command "response"))
-                  marshalized-body
-                  output))))
+  (let-keywords* keywords ((eof-handler (lambda ()
+                                          (print "Got eof from client"))))
+    (receive (header body)
+        (read-dsmp input :eof-handler eof-handler)
+      (let ((marshalized-body (marshal
+                               table
+                               (apply handle-dsmp-body
+                                      (command-of header)
+                                      body table
+                                      input output
+                                      keywords))))
+        (dsmp-write (dsmp-header->string
+                     (make-dsmp-header-from-string marshalized-body
+                                                   :command "response"))
+                    marshalized-body
+                    output)))))
 
 (provide "dsm/common")

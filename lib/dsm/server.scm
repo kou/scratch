@@ -42,7 +42,8 @@
                   (x->string mount-point)))
 
 (define-method start-dsm-server ((self <dsm-server>))
-  (let ((selector (make <selector>)))
+  (let ((selector (make <selector>))
+        (exit-current-client #f))
 
     (define (accept-handler sock flag)
       (let* ((client (socket-accept (socket-of self)))
@@ -54,10 +55,19 @@
                        '(r))))
     
     (define (handle-dsmp client input output)
-      (dsmp-response (marshal-table-of self)
-                     input output
-                     :get-handler (cut get-by-mount-point self <>)))
-    
+      (call/cc
+       (lambda (cont)
+         (set! exit-current-client cont)
+         (dsmp-response (marshal-table-of self)
+                        input output
+                        :get-handler (cut get-by-mount-point self <>)
+                        :eof-handler (cut eof-handler client input output)))))
+
+    (define (eof-handler client input output)
+      (selector-delete! selector input #f #f)
+      (socket-shutdown client 2)
+      (exit-current-client 0))
+                     
     (selector-add! selector
                    (socket-fd (socket-of self))
                    accept-handler

@@ -17,7 +17,8 @@
                   (run-process server-command
                                "--host" server-host
                                "--port" server-port)
-                (sys-nanosleep 500000000)))))
+                (sys-nanosleep 500000000) ; wait for starting server
+                ))))
      (teardown
       (lambda ()
         (process-kill process)))
@@ -34,4 +35,11 @@
                    (assert-equal (caddr elem)
                                  (apply (server (car elem)) (cdddr elem))))
                  procedure-list)))
+    ("multiple client test"
+     (for-each (lambda (elem)
+                 (let ((server (connect-server :host server-host
+                                               :port server-port)))
+                   (assert-equal (caddr elem)
+                                 (apply (server (car elem)) (cdddr elem)))))
+               procedure-list))
     ))
