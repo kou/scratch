@@ -11,8 +11,8 @@
           *scratch-password-key* *scratch-action-key*
           *scratch-action-not-specify* *scratch-language-key*
           
-          session parameters user-manager servlet-db app-gettext
-          languages default-language
+          session parameters user-manager servlet servlet-db
+          app-gettext languages default-language
           
           get-param get-action get-user
           get-servlet-value set-servlet-value!
@@ -29,7 +29,9 @@
           login! logout! login?
           valid-user? user-exists?
           
-          _ n_)
+          _ n_ c_ nc_
+
+          domain-of)
   )
 (select-module scratch.common)
 
@@ -50,6 +52,7 @@
 (define session (make-parameter #f))
 (define parameters (make-parameter '()))
 (define user-manager (make-parameter #f))
+(define servlet (make-parameter #f))
 (define servlet-db (make-parameter #f))
 (define app-gettext (make-parameter #f))
 (define languages (make-parameter #f))
@@ -161,5 +164,12 @@
   ((app-gettext) 'get msg-id))
 (define (n_ msg-id . opt)
   (apply (app-gettext) 'nget msg-id opt))
+(define (c_ msg-id locale)
+  ((make-gettext (domain-of (servlet)) (list locale)) 'get msg-id))
+(define (nc_ msg-id msg-id locale . opt)
+  (apply (make-gettext (domain-of (servlet)) (list locale)) 'nget msg-id opt))
+
+(define-method domain-of ()
+  (error "dummy method"))
 
 (provide "scratch/common")

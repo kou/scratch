@@ -68,7 +68,8 @@
       (let ((langs (get-param *scratch-language-key*
                               (default-languages-of self)
                               :list #t)))
-        (parameterize ((languages langs)
+        (parameterize ((servlet self)
+                       (languages langs)
                        (app-gettext (make-gettext (domain-of self)
                                                   ;; I don't know why
                                                   ;; I need reverse!!!
