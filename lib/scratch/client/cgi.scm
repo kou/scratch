@@ -12,7 +12,7 @@
   (use text.tree)
   (use text.html-lite)
   (use dsm.client)
-  (export scratch-cgi-main))
+  (export scratch-cgi-main scratch-mobile-agent?))
 (select-module scratch.client.cgi)
 
 (define (add-meta-info params default-langs)
@@ -180,5 +180,9 @@
   (rxmatch-case charset
     (#/eucjp/i (orig) "EUC-JP")
     (else charset)))
+
+(define (scratch-mobile-agent?)
+  (#/(DoCoMo|J-PHONE|UP\.Browser|DDIPOCKET|ASTEL|PDXGW|Palmscape|Xiino|sharp pda browser|Windows CE|L-mode)/
+     (get-meta "HTP_USER_AGENT")))
 
 (provide "scratch/client/cgi")
