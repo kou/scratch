@@ -106,11 +106,14 @@
                            :status "MOVED"
                            :Location <>))
                   (else
-                   `(,(make-cgi-header :cookies cookies
-                                       :status status
-                                       :Content-Type content-type
-                                       :Content-Length (string-size body))
-                     ,body))))))
+                   (list
+                    (make-cgi-header :cookies cookies
+                                     :status status
+                                     :content-type content-type
+                                     ;; late if uncomment out. why??
+                                     ;; :Content-Length (string-size body)
+                                     )
+                    body))))))
      :merge-cookies #t
      :on-error error-proc)))
 
