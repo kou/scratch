@@ -8,7 +8,7 @@
   (export make-scratch-session
           response-info-list
           get-value set-value! delete-value! value-exists?
-          get-id se-id!
+          get-id set-id!
           get-response-value set-response-value!
           delete-response-value! response-value-exists?
           get-cycle-value set-cycle-value!

@@ -65,7 +65,8 @@
     (cgi-main
      (lambda (params)
        (let* ((params (map (lambda (elem)
-                             (map (cut ces-convert <> "*JP")
+                             (map (lambda (x)
+                                    (ces-convert (x->string x) "*JP"))
                                   elem))
                            params))
               (dispatch (client mount-point))

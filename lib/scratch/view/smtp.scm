@@ -20,8 +20,8 @@ X-Mailer: scratch-client-mail
   (string-append (default-header)
                  "DEFAULT VIEW"))
 
-(define (rfc2822)
-  (date->string (time-utc->date (current-time))
+(define (rfc2822 . time)
+  (date->string (time-utc->date (get-optional time (current-time)))
                 "~a, ~d ~b ~Y ~X ~z"))
 
 (provide "scratch/view/smtp")

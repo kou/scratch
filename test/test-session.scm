@@ -1,6 +1,7 @@
 #!/usr/bin/env gosh
 
 (use gauche.parameter)
+(use srfi-1)
 (use util.list)
 (use test.unit)
 (use scratch.session)
@@ -72,7 +73,9 @@
                                          (set-response-value! s key value))
                                        elem))
                               (slices args 2))
-                    (assert-equal (sort (slices expected 2) compare)
+                    (assert-equal (sort (cons (list *scratch-id-key* (get-id s))
+                                              (slices expected 2))
+                                        compare)
                                   (sort (slices (response-info-list s) 2)
                                         compare))))
                 '((())

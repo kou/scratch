@@ -100,7 +100,7 @@
                            (add-param name value
                                       (parse-body
                                        (open-input-string (add-line next body))
-                                       acc
+                                       '()
                                        default-param-name))))))))
           ((rxmatch #/^(?:>\s*)?(\S+):\s*(.+)$/ line)
            => (lambda (md)

@@ -86,10 +86,11 @@
 (define (get-valid-session table id)
   (and (id-exists? table id)
        (let ((session (id-ref table id)))
-         (begin0
-             (and (valid-session? session) session)
-           (when (not (valid-session? session))
-             (id-delete! table id))))))
+         (if (valid-session? session)
+           session
+           (begin
+             (id-delete! table id)
+             #f)))))
 
 (define (valid-session? session)
   (and session (valid? session)))
@@ -118,7 +119,8 @@
 (define (store-session servlet out)
   (let ((table (session-table-of servlet)))
     (write (filter (lambda (elem)
-                     (and (marshalizable? (car elem))
+                     (and (valid-session? (cdr elem))
+                          (marshalizable? (car elem))
                           (marshalizable? (cdr elem))))
                    (marshal-table->alist table))
            out)))
