@@ -5,7 +5,7 @@
   (use gauche.charconv)
   (use dsm.marshal)
   (export dsmp-request dsmp-response
-          version-of encoding-of length-of id-of)
+          version-of encoding-of length-of)
   )
 (select-module dsm.common)
 
@@ -129,7 +129,8 @@
                                in out
                                :command "response"
                                :get-handler get-handler
-                               :post-handler post-handler)))
+                               :post-handler post-handler
+                               :eof-handler eof-handler)))
               (else obj))))
     
     (define (response-handler obj)
@@ -137,7 +138,8 @@
           (lambda arg
             (eval-in-remote obj arg table in out
                             :get-handler get-handler
-                            :post-handler post-handler))
+                            :post-handler post-handler
+                            :eof-handler eof-handler))
           (post-handler obj)))
 
     (dsmp-handler)))

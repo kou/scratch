@@ -5,9 +5,16 @@
   (use text.tree)
   (use text.html-lite)
   (use scratch.common)
-  (export scratch-cgi-main)
+  (use dsm.client)
+  (export scratch-cgi-main
+          connect-server)
   )
 (select-module scratch.client.cgi)
+
+(define (connect-server . args)
+  (apply (with-module dsm.client connect-server)
+         `(,@args
+           :eof-handler ,(lambda args #f))))
 
 (define (add-meta-info params)
   (fold (lambda (key-info prev)

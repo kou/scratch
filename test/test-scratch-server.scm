@@ -11,7 +11,7 @@
                   :prepare (lambda (item)
                              (,prepare-proc (car item) (cdr item))))))
 
-(let ((server #f))
+'(let ((server #f))
   (define-test-case "scratch server test"
     (setup
      (lambda () (set! server (make-scratch-server :port 7890))))

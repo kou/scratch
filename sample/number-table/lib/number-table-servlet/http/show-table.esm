@@ -2,7 +2,7 @@
 <% (for-each (lambda (row) %>
 	<tr>
 <%           (for-each (lambda (cell)  %>
-	 	<td><%= (h cell)  %></td>
+		<td><%=            (h cell)  %></td>
 <%                     ) row) %>
 	</tr>
 <%           )
