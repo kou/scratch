@@ -3,6 +3,7 @@
   (use marshal)
   (use scratch.session)
   (use scratch.user.manager)
+  (use scratch.db)
   (use gauche.parameter)
   (use file.util)
   (export <scratch-servlet> dispatch
@@ -10,6 +11,7 @@
 (select-module scratch.servlet)
 
 (autoload scratch.user.manager.null <user-manager-null>)
+(autoload scratch.db.null <scratch-db-null>)
 
 (define-class <scratch-servlet> ()
   ((session-constructor :accessor session-constructor-of
@@ -19,14 +21,19 @@
    (session-table :accessor session-table-of
                   :init-form (make-marshal-table))
    (user-manager :accessor user-manager-of
+                 :init-keyword :user-manager
                  :init-form (make <user-manager-null>))
    (working-directory :accessor working-directory-of
                       :init-keyword :working-directory
-                      :init-value ".")))
+                      :init-value ".")
+   (db :accessor db-of :init-keyword :db
+       :init-form (make <scratch-db-null>))
+   ))
 
 (define-method initialize ((self <scratch-servlet>) args)
   (next-method)
-  (make-directory* (working-directory-of self)))
+  (make-directory* (working-directory-of self))
+  (restore (db-of self) (working-directory-of self)))
 
 (define (get-module module-name)
   (or (find-module module-name)
@@ -38,13 +45,20 @@
   (let ((sess (get-session self id)))
     (register-session! self sess)
     (parameterize ((session sess)
-                   (parameters args))
-      (check-login-do (user-manager-of self)
-                      (get-param *scratch-user-key* #f)
-                      (get-param *scratch-password-key* #f)
-                      action
-                      (cut do-action self <>))
-      (make-response self type))))
+                   (parameters args)
+                   (user-manager (user-manager-of self))
+                   (servlet-db (db-of self)))
+      (clear! (session))
+      (set! (response-key-of (session))
+            (check-login-do (user-manager)
+                            (or (get-param *scratch-user-key* #f)
+                                (get-user))
+                            (get-param *scratch-password-key* #f)
+                            action
+                            (cut do-action self <>)))
+      (begin0
+          (make-response self type)
+        (store (db-of self) (working-directory-of self))))))
 
 (define (get-session servlet id)
   (if id
@@ -78,7 +92,7 @@
   (let ((result (eval-exported-proc (get-response-module servlet type)
                                     (response-key-of (session))
                                     *scratch-default-view-name*)))
-    (list (response-info (session))
+    (list (response-info-list (session))
           result)))
 
 ;; default procedure

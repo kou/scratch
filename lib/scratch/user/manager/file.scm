@@ -1,37 +1,39 @@
 (define-module scratch.user.manager.file
   (extend scratch.user.manager)
-  (use util.list)
+  (use scratch.db)
+  (use scratch.db.file)
   (export <user-manager-file>))
 (select-module scratch.user.manager.file)
 
 (define-class <user-manager-file> (<user-manager>)
-  ((filename :accessor filename-of
-             :init-keyword :filename
-             :init-value ".passwd")
-   (user-db :accessor user-db-of
-            :init-form (make-hash-table 'string=?))))
+  ((user-db :accessor user-db-of)))
+
+(define-method initialize ((self <user-manager-file>) args)
+  (let-keywords* args ((filename ".passwd"))
+    (set! (user-db-of self)
+          (make <scratch-db-file> :filename filename)))
+  (next-method))
 
 (define-method store ((self <user-manager-file>))
-  (call-with-output-file (filename-of self)
-    (lambda (out)
-      (write (hash-table->alist (user-db-of self)) out))))
+  (store (user-db-of self) (working-directory-of self)))
 
 (define-method restore ((self <user-manager-file>))
-  (if (file-exists? (filename-of self))
-      (set! (user-db-of self)
-            (call-with-input-file (filename-of self)
-              (lambda (in)
-                (alist->hash-table (read in) 'string=?))))))
+  (restore (user-db-of self) (working-directory-of self)))
 
-(define-method add-user! ((self <user-manager-file>) uesr password . keywrods)
+(define-method add-user! ((self <user-manager-file>) user password . keywords)
   (define (add)
     (let ((can-add? (and (string? user) (string? password))))
-      (if can-add?
-          (hash-table-put! (user-db-of self)
-                           (list user
-                                 (compute-pass-phrase (digest-type-of self)
-                                                      password))))
+      (when can-add?
+        (set-value! (user-db-of self)
+                    user
+                    (make-user-info 
+                     (compute-pass-phrase (digest-type-of self)
+                                          password)))
+        (store self))
       can-add?))
+  (if (not (string=? user))
+      (error "user must be string." user))
+  (restore self)
   (let-keywords* keywords ((if-exists #f))
     (if (user-exists? self user)
         (case if-exists
@@ -40,10 +42,12 @@
           ((#f) #f))
         (add))))
 
-(define-method remove-user! ((self <user-manager-file>) uesr . keywords)
+(define-method remove-user! ((self <user-manager-file>) user . keywords)
   (define (remove)
-    (hash-table-delete! (user-db-of self) user)
+    (remove-value! (user-db-of self) user)
+    (store self)
     #t)
+  (restore self)
   (let-keywords* keywords ((if-does-not-exist #f))
     (if (user-exists? self user)
         (remove)
@@ -53,12 +57,23 @@
 
 (define-method user-exists? ((self <user-manager-file>) user)
   (and (string? user)
-       (hash-table-exists? (user-db-of self) user)))
+       (value-exists? (user-db-of self) user)))
 
 (define-method pass-phrase ((self <user-manager-file>) user)
-  (if (and (string? user)
-           (hash-table-exists? (user-db-of self) user))
-      (cadr (hash-table-get (user-db-of self) user))
+  (if (user-exists? self user)
+      (user-info-pass-phrase (get-value (user-db-of self) user))
+      #f))
+
+(define *user-info-version* 1)
+(define (make-user-info pass-phrase)
+  (list *user-info-version* pass-phrase))
+(define (user-info-version user-info)
+  (car user-info))
+(define (user-info-pass-phrase user-info)
+  (if (and (number? (user-info-version user-info))
+           (= (user-info-version user-info)
+              *user-info-version*))
+      (cadr user-info)
       #f))
 
 (provide "scratch/user/manager/file")

@@ -1,52 +1,107 @@
 (define-module number-table-servlet
+  (use srfi-2)
+  (use www.cgi)
+  (use gauche.parameter)
   (use scratch.servlet)
   (use scratch.session)
   (use scratch.user.manager.file)
+  (use scratch.db.file)
   (use number-table)
-  (use www.cgi)
+  (use number-table-servlet.clear-list)
   (export make-number-table-servlet
-          do-move))
+          do-move do-deny))
 (select-module number-table-servlet)
 
 (define (make-number-table-servlet)
   (make <scratch-servlet>
     :servlet-module (find-module 'number-table-servlet)
     :session-constructor make-session
+    :db (make <scratch-db-file>)
     :user-manager (make <user-manager-file>
-                    :default-authority 'deny)))
+                    :default-authority 'deny
+                    :authority-map '((#t add-user)))))
 
 (define (make-session)
-  (let ((table (make-number-table 3)))
+  (let ((table (make-number-table 2)))
     (shuffle-table! table)
-    (let ((session (make-scratch-session :table table
-                                         :count 0)))
-      (update-session session)
-      session)))
+    (let ((sess (make-scratch-session :table table
+                                      :count 0)))
+      (parameterize ((session sess))
+        (update-state!))
+      sess)))
 
 (define (get-available-ways table)
   (call-with-values
       (lambda () (available-ways table))
     list))
 
-(define (table-of session)
-  (get-value session 'table))
+(define (table)
+  (get-state 'table))
 
-(define (count-of session)
-  (get-value session 'count))
+(define (count)
+  (get-state 'count))
 
-(define (update-session session)
-  (let ((table (table-of session)))
-    (set-value! session 'clear? (clear? table))
-    (set-value! session 'available-ways (get-available-ways table))
-    ))
+(define (game-clear?)
+  (get-state 'clear?))
+
+(define (update-state!)
+  (set-state! 'clear? (clear? (table)))
+  (set-state! 'available-ways (get-available-ways (table))))
+
+(define (do-default)
+  (do-main))
+
+(define (do-main)
+  (if (game-clear?)
+      (begin
+        (set-value! (servlet-db) 'clear-list
+                    (cons (make-clear-list (get-user) (count))
+                          (get-value (servlet-db) 'clear-list '())))
+        'clear-list)
+      'main))
 
 (define (do-move)
-  (let* ((sess (session))
-         (table (table-of sess))
-         (count (count-of sess))
-         (way (get-param "way" :convert string->symbol)))
-    (set-value! sess 'count (+ 1 (count-of sess)))
-    (move! table way)
-    (update-session sess)))
+  (let* ((way (get-param "way" :convert string->symbol)))
+    (set-state! 'count (+ 1 (count)))
+    (move! (table) way)
+    (update-state!)
+    (do-main)))
+
+(define (do-add-user)
+  (or (and-let* ((user (get-param *scratch-user-key*))
+                 (user)
+                 (password (get-param *scratch-password-key*))
+                 (password))
+                (if (user-exists? (user-manager) user)
+                    (begin
+                      (set-session-value!
+                       (session) :message #`"user ,|user| already exists.")
+                      'add-user)
+                    (if (add-user! (user-manager) user password)
+                        (begin
+                          (set-session-value!
+                           (session) :message #`"user ,|user| added.")
+                          'login)
+                        (begin
+                          (set-session-value!
+                           (session) :message #`"user ,|user| can't add.")
+                          'add-user))))
+      'add-user))
+
+(define (do-deny)
+  (do-login))
+
+(define (do-login)
+  (or (and-let* ((user (get-param *scratch-user-key*))
+                 (user)
+                 (password (get-param *scratch-password-key*))
+                 (password))
+                (if (valid-user? user password)
+                    'jump-to-main
+                    (begin
+                      (set-session-value!
+                       (session) :message "password doesn't match")
+                      'login)))
+      'login))
 
 (provide "number-table-servlet")

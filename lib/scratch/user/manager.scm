@@ -2,9 +2,11 @@
   (extend scratch.common)
   (use util.digest)
   (use file.util)
+  (use scratch.db)
   (export check-login-do
           store restore
-          add-user! remove-user! user-exists?))
+          add-user! remove-user! user-exists?
+          valid-user?))
 (select-module scratch.user.manager)
 
 (autoload rfc.md5 <md5>)
@@ -38,11 +40,13 @@
                       *scratch-deny-action-name*)))
 
 (define (allow? manager user action)
-  (let ((auth-info (assoc user (authority-map-of manager))))
-    (if auth-info
-        (and (memq action (cdr auth-info))
-             (not (eq? 'allow (default-authority-of manager))))
-        (eq? 'allow (default-authority-of manager)))))
+  (or (login? user)
+      (let ((auth-info (or (assoc user (authority-map-of manager))
+                           (assoc #t (authority-map-of manager)))))
+        (if auth-info
+            (and (memq action (cdr auth-info))
+                 (not (eq? 'allow (default-authority-of manager))))
+            (eq? 'allow (default-authority-of manager))))))
 
 (define-method store ((self <user-manager>))
   (error "not implemented"))
@@ -62,11 +66,11 @@
 (define-method user-exists? ((self <user-manager>) user)
   (error "not implemented"))
 
-(define (valid-user? manager user password)
+(define-method valid-user? ((self <user-manager>) user password)
   (and (string? user)
        (string? password)
-       (valid-password? (digest-type-of maneger)
-                        (pass-phrase manager user)
+       (valid-password? (digest-type-of self)
+                        (pass-phrase self user)
                         password)))
 
 (define (valid-password? digest-type required-pass-phrase password)

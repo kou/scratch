@@ -50,7 +50,7 @@
                         `((,(x->string *scratch-id-key*)
                            ,(x->string
                              (get-keyword *scratch-id-key* header-info id)))))))
-         `(,(cond ((get-keyword "location" header-info #f)
+         `(,(cond ((get-keyword :location header-info #f)
                    => (cut cgi-header
                            :cookies cookies
                            :location <>))

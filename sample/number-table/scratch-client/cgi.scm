@@ -1,4 +1,4 @@
-#!/usr/local/bin/gosh -u gauche.interactive
+#!/usr/local/bin/gosh -ugauche.interactive
 
 (use dsm.client)
 (use scratch.client.cgi)

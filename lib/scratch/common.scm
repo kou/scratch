@@ -7,12 +7,13 @@
   (use scratch.session)
   (export *scratch-id-key* *scratch-user-key*
           *scratch-password-key* *scratch-action-key*
-          session parameters
+          session parameters user-manager servlet-db
           get-param get-action get-user
           get-state set-state!
           get-id set-id!
           generate-id&action
-          login! logout! login?)
+          login! logout! login?
+          valid-user?)
   )
 (select-module scratch.common)
 
@@ -28,6 +29,8 @@
 
 (define session (make-parameter #f))
 (define parameters (make-parameter '()))
+(define user-manager (make-parameter #f))
+(define servlet-db (make-parameter #f))
 
 (define (get-param keyword . options)
   (apply cgi-get-parameter (x->string keyword) (parameters)
@@ -47,7 +50,7 @@
   (get-id (session)))
 
 (define-method get-id (session)
-  (get-response-value session *scratch-id-key* #f))
+  (get-value session *scratch-id-key* #f))
 
 (define-method set-id! ()
   (set-id! (session)))
@@ -56,7 +59,7 @@
   (set-id! session (id-of session)))
 
 (define-method set-id! (session id)
-  (set-response-value! session *scratch-id-key* id))
+  (set-value! session *scratch-id-key* id))
 
 (define (get-action)
   (get-param *scratch-action-key*))
@@ -67,7 +70,8 @@
 (define (generate-id&action . args)
   (let ((default-id (get-id)))
     (let loop ((id default-id)
-               (action *scratch-default-action-name*)
+               (action (or (get-action)
+                           *scratch-default-action-name*))
                (args args))
       (cond ((null? args) (values id action args))
             ((memq (car args) '(:new-session :action))
@@ -100,5 +104,8 @@
     (and (string? user)
          (string? current-user)
          (string=? user current-user))))
+
+(define-method valid-user? (user password)
+  (valid-user? (user-manager) user password))
 
 (provide "scratch/common")

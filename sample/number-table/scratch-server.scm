@@ -1,5 +1,6 @@
 #!/usr/bin/env gosh
 
+(use gauche.interactive)
 (use dsm.server)
 (use scratch.server)
 (use number-table-servlet)
