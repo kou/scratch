@@ -5,7 +5,9 @@
   (use gauche.regexp)
   (use srfi-1)
   (use srfi-13)
+  (use rfc.822)
   (use rfc.cookie)
+  (use util.list)
   (use text.tree)
   (use text.html-lite)
   (export scratch-cgi-main)
@@ -45,7 +47,12 @@
              ,(lambda (value)
                 (or (cgi-get-parameter "language" params :default #f)
                     (parse-accept-language value default-langs)))))
-           "language"))))
+           "language")
+          ((("HTTP_IF_MODIFIED_SINCE"
+             ,(lambda (value)
+                (and value
+                     (rfc822-date->date value)))))
+           "if-modified-since"))))
 
 (define (parse-accept-language value . default)
   (let ((langs (if (string? value)
@@ -86,6 +93,7 @@
                         `((,(x->string *scratch-id-key*)
                            ,(x->string
                              (get-keyword *scratch-id-key* header-info id))))))
+              (status (get-keyword :status header-info "OK"))
               (content-type
                (get-keyword :content-type header-info
                             (format "text/html; charset=~a"
@@ -93,17 +101,57 @@
                                      (or (ces-guess-from-string body "*JP")
                                          (gauche-character-encoding)))))))
          `(,(cond ((get-keyword :location header-info #f)
-                   => (cut cgi-header
+                   => (cut make-cgi-header
                            :cookies cookies
-                           :location <>))
+                           :status "MOVED"
+                           :Location <>))
                   (else
-                   `(,(cgi-header :cookies cookies
-                                  :Content-Type content-type
-                                  :Content-Length
-                                  (string-size body))
+                   `(,(make-cgi-header :cookies cookies
+                                       :status status
+                                       :Content-Type content-type
+                                       :Content-Length (string-size body))
                      ,body))))))
      :merge-cookies #t
      :on-error error-proc)))
+
+(define http-status-alist
+  '(("OK" "200 OK")
+    ("PARTIAL_CONTENT" "206 Partial Content")
+    ("MULTIPLE_CHOICES" "300 Multiple Choices")
+    ("MOVED" "301 Moved Permanently")
+    ("REDIRECT" "302 Found")
+    ("NOT_MODIFIED" "304 Not Modified")
+    ("BAD_REQUEST" "400 Bad Request")
+    ("AUTH_REQUIRED" "401 Authorization Required")
+    ("FORBIDDEN" "403 Forbidden")
+    ("NOT_FOUND" "404 Not Found")
+    ("METHOD_NOT_ALLOWED" "405 Method Not Allowed")
+    ("NOT_ACCEPTABLE" "406 Not Acceptable")
+    ("LENGTH_REQUIRED" "411 Length Required")
+    ("PRECONDITION_FAILED" "412 Precondition Failed")
+    ("SERVER_ERROR" "500 Internal Server Error")
+    ("NOT_IMPLEMENTED" "501 Method Not Implemented")
+    ("BAD_GATEWAY" "502 Bad Gateway")
+    ("VARIANT_ALSO_VARIES" "506 Variant Also Negotiates")))
+
+(define (replace-keyword new-value keyword-list)
+  (append-map (lambda (key&value)
+                (let ((key (car key&value)))
+                  (let ((new (assq key new-value)))
+                    (if new
+                      (cdr new)
+                      key&value))))
+              (slices keyword-list 2)))
+
+(define (make-cgi-header . args)
+  (let-keywords* args ((status "OK"))
+    (let ((status (cond ((assoc status http-status-alist)
+                         => cadr)
+                        (else
+                         status))))
+      (apply cgi-header
+             (replace-keyword `((:status :Status ,status))
+                              args)))))
 
 (define (scratch-error-proc e debug)
   `(,(cgi-header)
