@@ -30,9 +30,11 @@
 
 (define (content-type->encoding ctype . default)
   (let ((md (rxmatch #/([^\;]+\;)?\s*charset=(\S+)/ ctype)))
-    (string-downcase (if md
-                         (md 2)
-                         (get-optional default "ascii")))))
+    (string-trim-both
+     (string-downcase (if md
+                        (md 2)
+                        (get-optional default "ascii")))
+     #\")))
 
 (define (encoding->language encoding default)
   (cond ((#/jp|jis|cp932/i encoding) "ja")

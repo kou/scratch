@@ -17,6 +17,7 @@
                                        args)))
                 `(("iso-2022-jp" "charset=iso-2022-jp")
                   ("iso-2022-jp" "charset=ISO-2022-JP")
+                  ("iso-2022-jp" "charset=\"iso-2022-jp\"")
                   ("iso-2022-jp" "" "iso-2022-jp")
                   ("iso-2022-jp" "" "ISO-2022-JP")
                   ("ascii" "")
