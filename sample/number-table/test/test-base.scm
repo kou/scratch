@@ -115,24 +115,24 @@
   ("move! test"
    (assert-equal '((1 2)
                    (3 #f))
-                 (move! :east
-                        '((1 2)
-                          (#f 3))))
+                 (move! '((1 2)
+                          (#f 3))
+                        'east))
    (assert-equal '((1 2)
                    (#f 3))
-                 (move! :west
-                        '((1 2)
-                          (3 #f))))
+                 (move! '((1 2)
+                          (3 #f))
+                        'west))
    (assert-equal '((1 #f)
                    (3 2))
-                 (move! :north
-                        '((1 2)
-                          (3 #f))))
+                 (move! '((1 2)
+                          (3 #f))
+                        'north))
    (assert-equal '((1 2)
                    (3 #f))
-                 (move! :south
-                        '((1 #f)
-                          (3 2)))))
+                 (move! '((1 #f)
+                          (3 2))
+                        'south)))
   ("clear? test"
    (assert-true (clear? '((1 2)
                           (3 #f))))

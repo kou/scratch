@@ -1,0 +1,13 @@
+<%= (header) %>
+<h1>Number Table</h1>
+<p>
+	<a href="<%= (href :new-session) %>">NEW GAME</a>
+	/
+	<%= (get-state 'count) %>
+</p>
+<% (if (get-state 'clear?) %>
+<h2>CLEAR!!!</h2>
+<% ) %>
+<%= (show-table) %>
+<%= (move-navi) %>
+<%= (footer) %>

@@ -1,9 +1,20 @@
 (define-module scratch.common
-  (export *scratch-store-mount-point* *scratch-restore-mount-point*)
+  (use www.cgi)
+  (export *scratch-id-key*
+          *scratch-action-key*
+          get-param)
   )
 (select-module scratch.common)
 
-(define *scratch-store-mount-point* "/store")
-(define *scratch-restore-mount-point* "/restore")
+(define *scratch-id-key* :__scratch_id__)
+(define *scratch-action-key* :__scratch_action__)
+
+(define (get-param keyword params . options)
+  (apply cgi-get-parameter (x->string keyword) params
+         :list #f
+         (if (or (null? options)
+                 (not (null? (cdr options))))
+             options
+             (list :default (car options)))))
 
 (provide "scratch/common")

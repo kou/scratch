@@ -60,8 +60,7 @@
                (let ((cell-index (find-index (cut eq? #f <>)
                                              row)))
                  (if cell-index
-                     (break (list cell-index row-index))
-                     #f)))
+                     (break (list cell-index row-index)))))
              table)
             ;; not found
             (list #f #f)))))
@@ -80,10 +79,10 @@
   (receive (x y)
       (empty-cell-index table)
     (case way
-      ((:east) (swap-cell! table x y (+ x 1) y))
-      ((:west) (swap-cell! table x y (- x 1) y))
-      ((:north) (swap-cell! table x y x (- y 1)))
-      ((:south) (swap-cell! table x y x (+ y 1)))
+      ((east) (swap-cell! table x y (+ x 1) y))
+      ((west) (swap-cell! table x y (- x 1) y))
+      ((north) (swap-cell! table x y x (- y 1)))
+      ((south) (swap-cell! table x y x (+ y 1)))
       (else (error "bad way" way)))
     table))
 
@@ -110,17 +109,17 @@
          (shuffle-time (* max-num max-num max-num
                           (+ 1 (random-integer max-num))))
          (way-table (hash-table 'eqv?
-                                '(0 . :west)
-                                '(1 . :north)
-                                '(2 . :east)
-                                '(3 . :south))))
+                                '(0 . west)
+                                '(1 . north)
+                                '(2 . east)
+                                '(3 . south))))
     (dotimes (i shuffle-time)
       (call-with-values (lambda () (available-ways table))
         (lambda ways
           (let ((way (random-integer (length ways))))
             (if (list-ref ways way)
-                (move! (hash-table-get way-table way)
-                       table)))))))
+                (move! table
+                       (hash-table-get way-table way))))))))
   table)
 
 (provide "number/table")

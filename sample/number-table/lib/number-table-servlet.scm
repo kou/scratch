@@ -1,28 +1,29 @@
-(define-module number-table-action
+(define-module number-table-servlet
   (use scratch.servlet)
+  (use scratch.session)
   (use number-table)
+  (use www.cgi)
   (export make-number-table-servlet
           do-move))
-(select-module number-table-action)
+(select-module number-table-servlet)
+
+(define (make-number-table-servlet)
+  (make <scratch-servlet>
+    :module (find-module 'number-table-servlet)
+    :session-constructor make-session))
 
 (define (make-session)
-  (let ((session (make-scratch-session))
-        (table (make-number-table 3)))
+  (let ((table (make-number-table 3)))
     (shuffle-table! table)
-    (set-value! session 'table table)
-    (set-value! session 'count 0)
-    (update-session session)
-    session))
+    (let ((session (make-scratch-session :table table
+                                         :count 0)))
+      (update-session session)
+      session)))
 
 (define (get-available-ways table)
   (call-with-values
       (lambda () (available-ways table))
     list))
-
-(define (make-number-table-servlet)
-  (make <scratch-servlet>
-    :module (find-module 'number-table-action)
-    :session-constructor make-session))
 
 (define (table-of session)
   (get-value session 'table))
@@ -36,12 +37,12 @@
     (set-value! session 'available-ways (get-available-ways table))
     ))
 
-(define (do-move session args)
+(define (do-move session params)
   (let ((table (table-of session))
         (count (count-of session))
-        (way (get-keyword :way args)))
-    (set-value! session 'count (+ 1 (count-of self)))
-    (move! table (make-keyword way))
+        (way (get-param "way" params :convert string->symbol)))
+    (set-value! session 'count (+ 1 (count-of session)))
+    (move! table way)
     (update-session session)))
 
-(provide "number-table-action")
+(provide "number-table-servlet")

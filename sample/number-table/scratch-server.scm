@@ -1,11 +1,15 @@
 #!/usr/bin/env gosh
 
+(use dsm.server)
 (use scratch.server)
 (use number-table-servlet)
 
+(define *number-table-port* 5969)
+(define *number-table-mount-point* "/number-table")
+
 (define (main args)
-  (let* ((server (make-dsm-server :port 5969)))
+  (let* ((server (make-scratch-server :port *number-table-port*)))
     (add-mount-point! server
-                      :mount-point "/number-table"
-                      :servlet (make-number-table-servlet))
-    (start-dsm-server server)))
+                      *number-table-mount-point*
+                      (make-number-table-servlet))
+    (start-scratch-server server)))

@@ -77,11 +77,13 @@
                  (hash-table-put! (id->obj-of table) (counter-of table) obj)
                  (counter-of table)))))
 
-(define-method id-ref ((table <marshal-table>) id)
+(define-method id-ref ((table <marshal-table>) id . fallback)
   (if (= id false-id)
       #f
       (or (hash-table-get (id->obj-of table) id #f)
-          (error "no object with id: " id))))
+          (if (null? fallback)
+              (error "no object with id: " id)
+              (car fallback)))))
 
 (define-method ct ((table <marshal-table>)) ;; for debug
   (hash-table->alist (id->obj-of table)))
