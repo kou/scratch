@@ -1,21 +1,13 @@
 (define-module scratch.client.cgi
-  (extend scratch.scratch)
+  (extend scratch.client)
   (use www.cgi)
   (use srfi-1)
   (use rfc.cookie)
   (use text.tree)
   (use text.html-lite)
-  (use scratch.common)
-  (use dsm.client)
-  (export scratch-cgi-main
-          connect-server)
+  (export scratch-cgi-main)
   )
 (select-module scratch.client.cgi)
-
-(define (connect-server . args)
-  (apply (with-module dsm.client connect-server)
-         `(,@args
-           :eof-handler ,(lambda args #f))))
 
 (define (add-meta-info params)
   (fold (lambda (key-info prev)

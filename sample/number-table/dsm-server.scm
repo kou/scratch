@@ -6,8 +6,8 @@
 (define (main args)
   (let* ((server (make-dsm-server :port 5969))
          (marshal-table (with-module dsm.server (marshal-table-of server)))
-         (id-get (with-module dsm.marshal id-get))
-         (id-ref (with-module dsm.marshal id-ref)))
+         (id-get (with-module marshal id-get))
+         (id-ref (with-module marshal id-ref)))
 
     (define (start-up)
       (let ((table (make-number-table 3))
