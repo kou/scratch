@@ -27,7 +27,8 @@
   (get-by-mount-point (dsm-server-of self) mount-point))
 
 (define (start-scratch-server server)
-  (start-dsm-server (dsm-server-of server)))
+  (start-dsm-server (dsm-server-of server))
+  (dsm-server-join! (dsm-server-of server)))
 
 (define (stop-scratch-server server)
   (stop-dsm-server (dsm-server-of server)))

@@ -14,7 +14,7 @@ GPL or BSD License
 
 == メーリングリスト
 
-((<COZMIXNG RWiki - 連絡先|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=%CF%A2%CD%ED%C0%E8>))を御覧下さい．
+((<COZMIXNG RWiki - 連絡先|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=%CF%A2%CD%ED%C0%E8>))を御覧下さい．
 
 == なにこれ？
 
@@ -33,7 +33,7 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
   * 取り換え可能なユーザ/セッション管理モジュール
   * CGIクライアントのサポート
   * SMTP経由のクライアントのサポート
-  * ((<esm|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=esm>))
+  * ((<esm|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=esm>))
     のサポート
 
 以下のような機能もあればいいなと思っています．
@@ -59,9 +59,9 @@ Gauche用のサーバ/クライアント方式Webベースアプリケーションフ
 
 == 依存ライブラリ
 
-  * ((<esm|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=esm>))
-  * ((<dsm|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=dsm>))
-  * ((<marshal|URL:http://www.cozmixng.org/~rwiki/index.rb?cmd=view;name=marshal>))
+  * ((<esm|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=esm>))
+  * ((<dsm|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=dsm>))
+  * ((<marshal|URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=marshal>))
 
 == 入手方法
 
