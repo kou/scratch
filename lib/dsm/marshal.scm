@@ -3,8 +3,8 @@
   (use srfi-10)
   (use util.list)
   (use gauche.collection)
-  (export marshalizable? marshal unmarshal referenced-object?
-          ct
+  (export marshalizable? marshal unmarshal reference-object?
+          using-same-table?
           make-marshal-table)
   )
 (select-module dsm.marshal)
@@ -15,7 +15,7 @@
    (port :init-keyword :port :accessor port-of))
   )
 
-(define (referenced-object? obj)
+(define (reference-object? obj)
   (is-a? obj <reference-object>))
          
 (define-reader-ctor '<reference-object>
@@ -29,16 +29,22 @@
           (port-of self)
           ))
 
-; (define-method object-hash ((self <reference-object>))
-;   (id-of self))
+(define-method object-hash ((self <reference-object>))
+  (logior (hash (id-of self))
+          (hash (host-of self))
+          (hash (port-of self))))
 
-; (define-method object-equal? ((self <reference-object>) other)
-;   (and (is-a? other <reference-object>)
-;        (= (id-of self) (id-of other))))
+(define-method object-equal? ((self <reference-object>) other)
+  (and (is-a? other <reference-object>)
+       (= (id-of self) (id-of other))
+       (string=? (host-of self) (host-of other))
+       (= (port-of self) (port-of other))))
 
-; (define-method object-equal? (self (other <reference-object>))
-;   (and (is-a? self <reference-object>)
-;        (= (id-of self) (id-of other))))
+(define-method object-equal? (self (other <reference-object>))
+  (and (is-a? other <reference-object>)
+       (= (id-of self) (id-of other))
+       (string=? (host-of self) (host-of other))
+       (= (port-of self) (port-of other))))
 
 (define (make-marshal-table host port)
   (let ((obj->id (make-hash-table 'eq?))
@@ -98,6 +104,11 @@
 (define-method marshalizable? ((vec <vector>))
   #t)
 
+(define (using-same-table? table object)
+  (and (reference-object? object)
+       (string=? (table 'host) (host-of object))
+       (= (table 'port) (port-of object))))
+
 (define (marshal table object)
   (define (make-marshalized-object obj)
     (if (and (marshalizable? obj)
@@ -105,7 +116,9 @@
         (map-to (class-of obj)
                 make-marshalized-object
                 obj)
-        (if (marshalizable? obj)
+        (if (or (marshalizable? obj)
+                (and (reference-object? obj)
+                     (not (using-same-table? table obj))))
             obj
             (make <reference-object>
               :id (table 'get obj)
@@ -117,12 +130,15 @@
     (get-output-string out)))
 
 (define (unmarshal table object)
-  (if (is-a? object <collection>)
-      (map-to (class-of object)
-              (cut unmarshal table <>)
-              object)
-      (if (is-a? object <reference-object>)
-          (table 'ref (id-of object))
-          object)))
+  (define (rec obj)
+    (if (is-a? obj <collection>)
+        (map-to (class-of obj)
+                rec
+                obj)
+        (if (using-same-table? table obj)
+            (table 'ref (id-of obj))
+            obj)))
+
+  (rec object))
 
 (provide "dsm/marshal")

@@ -8,7 +8,7 @@
           dsmp-write dsmp-request dsmp-response
           parse-dsm-header
           get-dsm-object-from-remote
-          get-sock-host&port
+          get-sock-host&port eval-in-remote
           version-of encoding-of length-of)
   )
 (select-module dsm.common)
@@ -80,32 +80,45 @@
 
 (define (dsmp-request marshaled-obj input output handle-object-proc . keywords)
   (let-keywords* keywords ((command "get"))
+;    (p marshaled-obj output)
     (dsmp-write (dsm-header->string
                  (make-dsm-header-from-string marshaled-obj :command command))
                 marshaled-obj
                 output)
     (let* ((dsm-header (parse-dsm-header (read-line input)))
            (body (get-dsm-body (length-of dsm-header) input)))
-      (handle-object-proc body))))
+;      (p (command-of dsm-header) body input)
+      (handle-object-proc dsm-header body))))
 
-(define (get-dsm-object-from-remote obj in out . options)
+(define (get-dsm-object-from-remote object table in out get-handler . options)
   (let-optionals* options ((command "get"))
-    (dsmp-request obj in out
-                  (lambda (object)
-                    (if (referenced-object? object)
-                        (lambda arg
-                          (p object)
-                          (eval-in-remote object arg in out))
-                        object))
+    (dsmp-request object in out
+                  (lambda (header body)
+                    (handle-dsmp-body (command-of header)
+                                      table
+                                      body
+                                      get-handler
+                                      in
+                                      out
+                                      ))
                   :command command)))
 
-(define (eval-in-remote obj arg in out)
-  (get-dsm-object-from-remote (cons obj arg) in out "eval"))
+(define (eval-in-remote obj arg table in out get-handler)
+  (get-dsm-object-from-remote (marshal table (cons obj arg))
+                              table in out get-handler "eval"))
 
-(define (handle-dsmp-body command table body make-body-proc)
+(define (handle-dsmp-body command table body make-body-proc in out)
   (cond ((string=? "eval" command)
          (apply (unmarshal table (car body))
-                (cdr body)))
+                (map (lambda (elem)
+                       (let ((obj (unmarshal table elem)))
+                         (if (and (reference-object? obj)
+                                  (not (using-same-table? table obj)))
+                             (lambda arg
+                               (eval-in-remote obj arg table
+                                               in out make-body-proc))
+                             obj)))
+                     (cdr body))))
         (else (make-body-proc body))))
 
 (define (dsmp-response header table input output make-body-proc)
@@ -118,7 +131,9 @@
                             (handle-dsmp-body (command-of dsm-header)
                                               table
                                               body
-                                              make-body-proc))))
+                                              make-body-proc
+                                              input
+                                              output))))
     (dsmp-write (dsm-header->string
                  (make-dsm-header-from-string marshalized-body))
                 marshalized-body
@@ -126,10 +141,9 @@
   )
 
 (define (get-sock-host&port sock)
-  (let* ((names (string-split
-                 (sockaddr-name (socket-address sock))
-                 #\:)))
-    (list (car names)
-          (string->number (cadr names)))))
+  (let* ((md (rxmatch #/(.*):(\d+)$/
+                      (sockaddr-name (socket-address sock)))))
+    (list (md 1)
+          (string->number (md 2)))))
     
 (provide "dsm/common")

@@ -35,7 +35,16 @@
           remote-obj))))
 
 (define (get-from-remote obj table in out . options)
-  (apply get-dsm-object-from-remote (marshal table obj) in out options))
+  (define (get-handler obj)
+    (if (reference-object? obj)
+        (lambda arg
+          (eval-in-remote obj arg table in out get-handler))
+        obj))
+
+  (apply get-dsm-object-from-remote
+         (marshal table obj) table in out
+         get-handler
+         options))
 
 (define (get-by-mount-point mount-point client-socket table)
   (let ((in (socket-input-port client-socket))

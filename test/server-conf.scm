@@ -12,5 +12,13 @@
   `(("procedure0" ,(lambda () #t) #t)
     ("procedure1" ,(lambda (x) (+ x 2)) 3 1)
     ("procedure2" ,(lambda (x y) (+ x y)) 3 1 2)
-;    ("procedure3" ,(lambda (proc x) (proc x)) 3 ,(lambda (x) (+ 1)) 2)
+    ("procedure3" ,(lambda (proc x) (proc x)) 3 ,(lambda (x) (+ 1 x)) 2)
+    ("procedure4"
+     ,(lambda (proc x)
+        (proc (lambda (y) (+ y 5))
+              x))
+     8
+     ,(lambda (proc x)
+        (proc (+ 1 x)))
+     2)
     ))

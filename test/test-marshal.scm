@@ -35,6 +35,10 @@
                (list 1 'abc "a" '(1) #()
                      (lambda () #f)
                      (make-hash-table)
-                     (with-module dsm.marshal (make <reference-object> :id 1))
+                     (with-module dsm.marshal
+                       (make <reference-object>
+                         :id 1
+                         :host "example.com"
+                         :port 5963))
                      (list 1 (lambda (x) x) '(1)))))
     ))

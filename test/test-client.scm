@@ -31,7 +31,7 @@
      (let ((server (connect-server :host server-host
                                    :port server-port)))
        (for-each (lambda (elem)
-                   (p elem)
+                   ;; (p elem)
                    (assert-equal (caddr elem)
                                  (apply (server (car elem)) (cdddr elem))))
                  procedure-list)))
