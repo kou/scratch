@@ -75,7 +75,9 @@
   (let-keywords* args ((error-proc (cut scratch-error-proc <>
                                         (get-keyword :debug args #f)))
                        (default-langs '())
-                       (output-encoding (cgi-output-character-encoding)))
+                       (output-encoding (cgi-output-character-encoding))
+                       (default-parameters '())
+                       (priority-parameters '()))
     (cgi-main
      (lambda (params)
        (let* ((server (dsm-connect-server uri))
@@ -83,7 +85,9 @@
                              (map (lambda (x)
                                     (ces-convert (x->string x) "*JP"))
                                   elem))
-                           params))
+                           `(,@priority-parameters
+                             ,@params
+                             ,@default-parameters)))
               (dispatch (server mount-point))
               (id (cgi-get-parameter (x->string *scratch-id-key*)
                                      params
@@ -106,6 +110,10 @@
                (get-keyword :content-type header-info
                             (format "text/html; charset=~a"
                                     (normalize-charset output-encoding))))
+              (content-encoding
+               (get-keyword :content-encoding header-info #f))
+              (content-length
+               (get-keyword :content-length header-info #f))
               (content-disposition
                (get-keyword :content-disposition header-info #f))
               (output-encoding
@@ -113,7 +121,8 @@
                    (_ charset)
                  charset
                  output-encoding)))
-         (cgi-output-character-encoding output-encoding)
+         (unless content-encoding
+           (cgi-output-character-encoding output-encoding))
          `(,(cond ((get-keyword :location header-info #f)
                    => (cut make-cgi-header
                            :cookies cookies
@@ -128,8 +137,13 @@
                            ;; :Content-Length (string-size body)
                            `(,@(if content-disposition
                                  `(:Content-Disposition ,content-disposition)
-                                 '()))
-                           )
+                                 '())
+                             ,@(if content-length
+                                 `(:Content-Length ,content-length)
+                                 '())
+                             ,@(if content-encoding
+                                 `(:Content-Encoding ,content-encoding)
+                                 '())))
                     body))))))
      :merge-cookies #t
      :on-error error-proc)))
