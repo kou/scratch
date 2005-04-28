@@ -11,6 +11,8 @@
           *scratch-password-key* *scratch-action-key*
           *scratch-action-not-specify* *scratch-language-key*
           
+          *scratch-base-uri-key* *scratch-base-key*
+          
           session parameters user-manager servlet servlet-db
           app-gettext languages default-language
           
@@ -25,6 +27,8 @@
           get-id set-id!
 
           generate-id&action&language
+
+          get-base get-base-uri
           
           login! logout! login?
           valid-user? user-exists?
@@ -48,6 +52,9 @@
 (define *scratch-action-not-specify* #f)
 
 (define *scratch-default-working-directory* ".state")
+
+(define *scratch-base-key* "base")
+(define *scratch-base-uri-key* "base-uri")
 
 (define session (make-parameter #f))
 (define parameters (make-parameter '()))
@@ -144,6 +151,13 @@
                                   ,@before
                                   ,@(cddr after))))
                         (values id action language args))))))))
+
+(define (get-base)
+  (get-param *scratch-base-key*))
+
+(define (get-base-uri)
+  (get-param *scratch-base-uri-key*))
+
 
 (define (login! user)
   (set-value! *scratch-user-key* user))

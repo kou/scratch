@@ -77,13 +77,18 @@
                        (default-langs '())
                        (output-encoding (cgi-output-character-encoding))
                        (default-parameters '())
-                       (priority-parameters '()))
+                       (priority-parameters '())
+                       (part-handlers '()))
     (cgi-main
      (lambda (params)
        (let* ((server (dsm-connect-server uri))
               (params (map (lambda (elem)
                              (map (lambda (x)
-                                    (ces-convert (x->string x) "*JP"))
+                                    (if (pair? x)
+                                      (map (lambda (y)
+                                             (ces-convert (x->string y) "*JP"))
+                                           x)
+                                      (ces-convert (x->string x) "*JP")))
                                   elem))
                            `(,@priority-parameters
                              ,@params
@@ -146,7 +151,8 @@
                                  '())))
                     body))))))
      :merge-cookies #t
-     :on-error error-proc)))
+     :on-error error-proc
+     :part-handlers part-handlers)))
 
 (define http-status-alist
   '(("OK" "200 OK")

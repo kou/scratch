@@ -73,7 +73,8 @@
   (let ((new-session? (get-keyword :new-session params #f)))
     (let-values (((id action language params)
                   (apply generate-id&action&language params)))
-      (h (string-append (get-param "script-name" "")
+      (h (string-append (or (get-base)
+                            (get-param "script-name" ""))
                         "?"
                         (alist->params-string
                          `(,@(if (and (not new-session?)
@@ -92,8 +93,11 @@
                            ,@(slices params 2))))))))
 
 (define (full-href . params)
-  (let ((host (get-param "host-name" "localhost")))
-    #`"http://,|host|,(apply href params)"))
+  (let ((base-uri (get-base-uri)))
+    (if base-uri
+      #`",|base-uri|,(apply href params)"
+      (let ((host (get-param "host-name" "localhost")))
+        #`"http://,|host|,(apply href params)"))))
 
 (define (input . keywords)
   (tree->string `("<input "
