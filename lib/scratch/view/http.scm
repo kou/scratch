@@ -132,10 +132,16 @@
                                        :value language))
                           '()))))))
 
-(define (language-select current-lang langs . key)
-  (tree->string `("<select name=\""
-                  ,(get-optional key *scratch-language-key*)
-                  "\">\n"
+(define (language-select current-lang langs . args)
+  (let-keywords* args ((key *scratch-language-key*)
+                       (use-onchange-submit? #t))
+    (tree->string `("<select name=\""
+                    ,key
+                  "\""
+                  (if use-onchange-submit?
+                    " onchange=\"this.form.submit();\""
+                    "")
+                  ">\n"
                   ,@(map (lambda (lang)
                            `("<option value=\"" ,(h lang) "\""
                              ,(if (equal? current-lang lang)
@@ -146,7 +152,7 @@
                              "(" ,(h lang) ")"
                              "</option>\n"))
                          langs)
-                  "</select>\n")))
+                  "</select>\n"))))
 
 (define (user-name-input . attrs)
   (apply input
